@@ -15,7 +15,6 @@ public class SplixGame extends AbstractGame {
 
     @Override
     protected void step() {
-
     }
 
     @Override
