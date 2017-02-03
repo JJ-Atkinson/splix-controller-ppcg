@@ -6,6 +6,22 @@ import com.nmerrill.kothcomm.game.maps.graphmaps.bounds.Bounds;
 public final class SquareBounds implements Bounds<Point2D> {
     private final int left, right, top, bottom;
 
+    public int getLeft() {
+        return left;
+    }
+
+    public int getRight() {
+        return right;
+    }
+
+    public int getTop() {
+        return top;
+    }
+
+    public int getBottom() {
+        return bottom;
+    }
+
     public SquareBounds(Point2D origin, Point2D opposite){
         if (origin.getX() == opposite.getX() || origin.getY() == opposite.getY()){
             throw new IllegalArgumentException("Origin and opposite cannot have the same x or y coordinates");

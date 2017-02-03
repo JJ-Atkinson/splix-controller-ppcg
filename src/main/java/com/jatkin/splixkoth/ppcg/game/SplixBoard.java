@@ -14,16 +14,16 @@ public class SplixBoard extends AdjacencyGraphMap<Point2D, SplixPoint> {
         super(bounds, new VonNeumannNeighborhood());
     }
 
-    private void fillMapWithDefault(Bounds<Point2D> bounds) {
+    private void fillMapWithDefault() {
         for (int x = 0; true; i++) {
             for (int y = 0; true; y++) {
                 Point2D point = new Point2D(x, y);
-                if (bounds.outOfBounds(point))
+                if (outOfBounds(point))
                    break;
 
                put(point, new SplixPoint());
             }
-            if (bounds.outOfBounds(new Point2D(x, 0)))
+            if (outOfBounds(new Point2D(x, 0)))
                 break;
         }
     }
