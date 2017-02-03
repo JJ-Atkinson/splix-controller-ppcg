@@ -23,7 +23,7 @@ public class SplixPoint {
      */
     private boolean isPlayerLocatedOnSquare;
 
-    boolean isTrail() {
+    public boolean isTrail() {
         return isTrail;
     }
 

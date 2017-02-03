@@ -1,4 +1,6 @@
-package com.jatkin.splixkoth.ppcg.game;
+package com.jatkin.splixkoth.ppcg.game.readonly;
+
+import com.jatkin.splixkoth.ppcg.game.SplixPoint;
 
 /**
  * Created by Jarrett on 02/02/17.
