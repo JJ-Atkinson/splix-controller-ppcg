@@ -11,7 +11,7 @@ import org.eclipse.collections.impl.factory.Maps;
 import java.util.Iterator;
 import java.util.Random;
 
-public class AdjacencyGraphMap<U extends MapPoint, T> implements GraphMap<U, T>{
+public class AdjacencyGraphMap<U extends MapPoint, T> implements GraphMap<U, T> {
     private final Bounds<U> bounds;
     private final Neighborhood<U> neighborhood;
     private final MutableMap<U, T> points;

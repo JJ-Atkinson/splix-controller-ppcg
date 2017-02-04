@@ -18,25 +18,12 @@ public class SplixPoint {
      */
     private boolean isTrail;
 
-    /**
-     * Is this where the player is located.
-     */
-    private boolean isPlayerLocatedOnSquare;
-
     public boolean isTrail() {
         return isTrail;
     }
 
     void setTrail(boolean trail) {
         isTrail = trail;
-    }
-
-    public boolean isPlayerLocatedOnPoint() {
-        return isPlayerLocatedOnSquare;
-    }
-
-    public void setPlayerLocatedOnSquare(boolean playerLocatedOnSquare) {
-        isPlayerLocatedOnSquare = playerLocatedOnSquare;
     }
 
     public Submission<SplixPlayer> getTypeOfOwner() {
