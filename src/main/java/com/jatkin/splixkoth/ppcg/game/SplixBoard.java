@@ -56,20 +56,25 @@ public class SplixBoard extends AdjacencyGraphMap<Point2D, SplixPoint> {
         return ret;
     }
 
-    protected MutableSet<Submission<SplixPlayer>> getDeathsFromMoves(MutableMap<Submission<?>, Direction> playerMoves) {
+    /**
+     * Returns a list of players and who killed them.
+     * @param playerMoves Possible moves.
+     * @return
+     */
+    protected MutableMap<Submission<SplixPlayer>, Submission<SplixPlayer>> getDeathsFromMoves(MutableMap<Submission<?>, Direction> playerMoves) {
         MutableMap<Submission<?>, Point2D> newPlayerPositions = Maps.mutable.empty();
-        MutableSet<Submission<SplixPlayer>> ret = Sets.mutable.empty();
+        MutableMap<Submission<SplixPlayer>, Submission<SplixPlayer>> ret =
+                Maps.mutable.empty();
 
         MutableList<Submission<SplixPlayer>> players = playerPositions.keysView().toList();
-        players.forEach(player ->
-                newPlayerPositions.put(player,
+        players.forEach(player -> newPlayerPositions.put(player,
                         Utils.addPoints(playerPositions.get(player), playerMoves.get(player).vector)));
 
         for (int i = 0; i < players.size(); i++) {
             Submission<SplixPlayer> player1 = players.get(i);
             // check trail intersection
             if (get(playerPositions.get(player1)).isTrail()) {
-                ret.add(get(playerPositions.get(player1)).getTypeOfOwner());
+                ret.put(get(playerPositions.get(player1)).getTypeOfOwner(), player1);
             }
 
             // all combos of players
@@ -84,14 +89,14 @@ public class SplixBoard extends AdjacencyGraphMap<Point2D, SplixPoint> {
                 if (Utils.realMovementDist(po1, po2) < 3) {// they actually have a chance at colliding
                     if (po1.equals(po2)) {// head butt
                         if (get(pn1).getTypeOfOwner() != player1)// in his land?
-                            ret.add(player1);
+                            ret.put(player1, player2);
                         if (get(pn2).getTypeOfOwner() != player2)// in his land?
-                            ret.add(player2);
+                            ret.put(player2, player1);
                     }
 
                     if (po1.equals(pn2) && po2.equals(pn1)) {// swapping head butt, or player hitting just behind other person's head
-                        ret.add(player1);
-                        ret.add(player2);
+                        ret.put(player1, player2);
+                        ret.put(player2, player1);
                     }
                 }
             }
