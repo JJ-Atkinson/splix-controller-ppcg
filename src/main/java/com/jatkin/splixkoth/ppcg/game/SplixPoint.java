@@ -11,7 +11,7 @@ public class SplixPoint {
     /**
      * Who owns the point. May be null if nobody owns it.
      */
-    private Submission<?> typeOfOwner;
+    private Submission<SplixPlayer> typeOfOwner;
 
     /**
      * Is this the trail of the player.
@@ -37,5 +37,13 @@ public class SplixPoint {
 
     public void setPlayerLocatedOnSquare(boolean playerLocatedOnSquare) {
         isPlayerLocatedOnSquare = playerLocatedOnSquare;
+    }
+
+    public Submission<SplixPlayer> getTypeOfOwner() {
+        return typeOfOwner;
+    }
+
+    public void setTypeOfOwner(Submission<SplixPlayer> typeOfOwner) {
+        this.typeOfOwner = typeOfOwner;
     }
 }
