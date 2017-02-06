@@ -13,18 +13,7 @@ public class SplixPoint {
      */
     private Submission<SplixPlayer> typeOfOwner;
 
-    /**
-     * Is this the trail of the player.
-     */
-    private boolean isTrail;
-
-    public boolean isTrail() {
-        return isTrail;
-    }
-
-    void setTrail(boolean trail) {
-        isTrail = trail;
-    }
+    private Submission<SplixPlayer> typeOfClaimer;
 
     public Submission<SplixPlayer> getTypeOfOwner() {
         return typeOfOwner;
@@ -33,4 +22,8 @@ public class SplixPoint {
     public void setTypeOfOwner(Submission<SplixPlayer> typeOfOwner) {
         this.typeOfOwner = typeOfOwner;
     }
+
+    public Submission<SplixPlayer> getTypeOfClaimer() { return typeOfClaimer; }
+
+    public void setTypeOfClaimer(Submission<SplixPlayer> typeOfClaimer) { this.typeOfClaimer = typeOfClaimer; }
 }

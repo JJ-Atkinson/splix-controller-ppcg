@@ -9,9 +9,10 @@ import com.nmerrill.kothcomm.game.players.Submission;
 import org.eclipse.collections.api.list.MutableList;
 import org.eclipse.collections.api.map.MutableMap;
 import org.eclipse.collections.api.set.MutableSet;
-import org.eclipse.collections.impl.factory.Lists;
+import org.eclipse.collections.api.stack.MutableStack;
 import org.eclipse.collections.impl.factory.Maps;
 import org.eclipse.collections.impl.factory.Sets;
+import org.eclipse.collections.impl.factory.Stacks;
 
 import java.util.Random;
 import java.util.function.Predicate;
@@ -20,12 +21,12 @@ import java.util.function.Predicate;
  * Basic explanation.
  * A splix map is described by a map of 2d points and a splix point.
  * Each 2d point shows where the splix point is located, and the splix
- * point shows what is happening at that point. A splix point `isTrail`
- * shows if it is in a partial fill state where the player can be
- * killed by crossing it. This is only set when a player crosses area
- * that is not owned by him. When he has a trail and reattaches to
- * himself, all points that have `isTrail` are converted to normal points
- * and a flood fill is triggered.
+ * point shows what is happening at that point. A splix point `getTypeOfClaimer`
+ * shows that the line is part of the trail of that player. This is
+ * only set when a player crosses area that is not owned by him. When
+ * he has a trail and reattaches to himself, all points that have
+ * `getTypeOfClaimer` are converted to normal points and a flood
+ * fill is triggered.
  *
  * Created by Jarrett on 02/01/17.
  */
@@ -33,10 +34,16 @@ public class SplixBoard extends AdjacencyGraphMap<Point2D, SplixPoint> {
     private MutableMap<Submission<SplixPlayer>, Point2D> playerPositions;
 
     private final SquareBounds selfBounds;
+    private final MutableSet<Point2D> borderPoints;
 
     public SplixBoard(SquareBounds bounds) {
         super(bounds, new VonNeumannNeighborhood());
         selfBounds = bounds;
+        borderPoints =
+            locations().select(p -> p.getX() == selfBounds.getLeft()
+                                    || p.getX() == selfBounds.getRight()
+                                    || p.getY() == selfBounds.getTop()
+                                    || p.getY() == selfBounds.getBottom());
     }
 
     /**
@@ -96,70 +103,90 @@ public class SplixBoard extends AdjacencyGraphMap<Point2D, SplixPoint> {
     }
 
     /**
-     * Remove all remnants of a player from the board
+     * Remove all remnants of a player from the board. Triggers a flood fill
+     * run for all players.
      * @param players
      */
     public void killPlayers(MutableSet<Submission<SplixPlayer>> players) {
         for (Submission<SplixPlayer> player : players) {
-            for (Point2D point : getPointsOwnedBy(player)) {
+            // this makes me sad. so inefficient.
+            for (Point2D point : locations().select(x -> get(x).getTypeOfOwner() == player))
                 get(point).setTypeOfOwner(null);
-                get(point).setTrail(false);
-            }
+            for (Point2D point : locations().select(x -> get(x).getTypeOfClaimer() == player))
+                get(point).setTypeOfClaimer(null);
 
             playerPositions.remove(player);
         }
+        playerPositions.keySet().forEach(this::fillPlayerCapturedArea);
     }
 
     /**
      * Looks at all players and identifies if any of them have a finished trail.
+     * If they do the trail is converted to normal line. Triggers a fill for any
+     * player who connected.
      */
     public void checkPlayerTrailsConnected() {
         for (Submission<SplixPlayer> player : playerPositions.keySet()) {
             Point2D pos = playerPositions.get(player);
-            if (!get(pos).isTrail()) {// player has entered his own territory
-                MutableSet<Point2D> trail = followLine(pos, p -> get(p).isTrail() && get(p).getTypeOfOwner() == player);
-                for (Point2D trailPoint : trail) {
-                    get(trailPoint).setTrail(false);
+            if (get(pos).getTypeOfOwner() == player) {// player has entered his own territory
+                MutableSet<Point2D> trail = floodSearch(pos, p -> get(p).getTypeOfClaimer() == player);
+                trail.forEach(t -> get(t).setTypeOfClaimer(null));
+                trail.forEach(t -> get(t).setTypeOfOwner(player));
+                if (trail.notEmpty())
+                    fillPlayerCapturedArea(player);
+            }
+        }
+    }
+
+    /**
+     * Looks at the land owned by a player and identifies empty spaces that
+     * need to be filled. Incredibly inefficient, so use sparingly.
+     *
+     * @param whoToCheck
+     */
+    public void fillPlayerCapturedArea(Submission<SplixPlayer> whoToCheck) {
+        MutableSet<Point2D> allPoints = locations();
+        MutableSet<Point2D> alreadyOwnedSpace = allPoints.select(x -> get(x).getTypeOfOwner() == whoToCheck);
+        MutableSet<Point2D> checkSpace = allPoints.difference(alreadyOwnedSpace);
+        MutableSet<MutableSet<Point2D>> spacesToExamine = Sets.mutable.empty();
+
+        while (checkSpace.notEmpty()) {
+            Point2D start = checkSpace.iterator().next();
+            MutableSet<Point2D> connectedPoints = floodSearch(start, point -> get(point).getTypeOfOwner() != whoToCheck);
+            spacesToExamine.add(connectedPoints);
+            checkSpace.removeAll(connectedPoints);
+        }
+
+        // efficiency concern, if only one check space exists then we can return
+        if (spacesToExamine.size() == 1) return;
+
+        for (MutableSet<Point2D> space : spacesToExamine) {
+            // no points intersect boarder - no area that can be filled can intersect the boarder
+            if (space.intersect(borderPoints).size() == 0) {
+                // if the space intersects anything at all, we can't fill in
+                // set contains true if we can't fill in
+                boolean canFillIn = !space.collect(x -> {
+                    SplixPoint p = get(x);
+                    return p.getTypeOfOwner() != null || p.getTypeOfClaimer() != null;
+                }).contains(Boolean.TRUE);
+
+                if (canFillIn) {
+                    space.forEach(p -> get(p).setTypeOfOwner(whoToCheck));
                 }
             }
         }
     }
 
-    /**
-     * An attempt at efficiency. Allows a subset of the board to be searched
-     * when looking for a trail. Includes the start point in the return.
-     *
-     * Unsure of which searching algorithm is used...
-     */
-    private MutableSet<Point2D> followLine(Point2D start, Predicate<Point2D> isPartOfLine) {
+
+    private MutableSet<Point2D> floodSearch(Point2D start, Predicate<Point2D> isAccepted) {
         MutableSet<Point2D> ret = Sets.mutable.empty();
-        MutableList<Point2D> nodesToExamine = Lists.mutable.of(start);
+        MutableStack<Point2D> nodesToExamine = Stacks.mutable.of(start);
         while (nodesToExamine.notEmpty()) {
-            Point2D node = nodesToExamine.get(0);
-            MutableSet<Point2D> neighbors = getNeighbors(node);
+            Point2D node = nodesToExamine.pop();
             ret.add(node);
-
-            for (Point2D neighbor : neighbors) {
-                if (isPartOfLine.test(neighbor))
-                    nodesToExamine.add(neighbor);
-            }
-            nodesToExamine.remove(0);
+            MutableSet<Point2D> validNeighbors = getNeighbors(node).select(n -> !ret.contains(n) && inBounds(n));
+            validNeighbors.select(isAccepted::test).forEach(nodesToExamine::push);
         }
-        return ret;
-    }
-
-    /**
-     * Return all the points owned by a player
-     * @param player
-     * @return
-     */
-    public MutableSet<Point2D> getPointsOwnedBy(Submission<SplixPlayer> player) {
-        MutableSet<Point2D> ret = Sets.mutable.empty();
-        for (Point2D point : locations()) {
-            if (get(point).getTypeOfOwner() == player)
-                ret.add(point);
-        }
-
         return ret;
     }
 
