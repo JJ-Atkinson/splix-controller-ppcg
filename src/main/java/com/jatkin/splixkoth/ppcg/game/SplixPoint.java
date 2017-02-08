@@ -15,6 +15,13 @@ public class SplixPoint {
 
     private Submission<SplixPlayer> typeOfClaimer;
 
+    public SplixPoint(Submission<SplixPlayer> typeOfOwner, Submission<SplixPlayer> typeOfClaimer) {
+        this.typeOfOwner = typeOfOwner;
+        this.typeOfClaimer = typeOfClaimer;
+    }
+
+    public SplixPoint() {this (null, null);}
+
     public Submission<SplixPlayer> getTypeOfOwner() {
         return typeOfOwner;
     }
@@ -26,4 +33,9 @@ public class SplixPoint {
     public Submission<SplixPlayer> getTypeOfClaimer() { return typeOfClaimer; }
 
     public void setTypeOfClaimer(Submission<SplixPlayer> typeOfClaimer) { this.typeOfClaimer = typeOfClaimer; }
+
+    @Override
+    public String toString() {
+        return "SPoint: O=" + typeOfOwner + "; C=" + getTypeOfClaimer();
+    }
 }

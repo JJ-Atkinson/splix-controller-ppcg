@@ -31,7 +31,7 @@ import java.util.function.Predicate;
  * Created by Jarrett on 02/01/17.
  */
 public class SplixBoard extends AdjacencyGraphMap<Point2D, SplixPoint> {
-    private MutableMap<Submission<SplixPlayer>, Point2D> playerPositions;
+    private MutableMap<Submission<SplixPlayer>, Point2D> playerPositions = Maps.mutable.empty();
 
     private final SquareBounds selfBounds;
     private final MutableSet<Point2D> borderPoints;
@@ -44,6 +44,8 @@ public class SplixBoard extends AdjacencyGraphMap<Point2D, SplixPoint> {
                                     || p.getX() == selfBounds.getRight()
                                     || p.getY() == selfBounds.getTop()
                                     || p.getY() == selfBounds.getBottom());
+
+        fillMapWithDefault();
     }
 
     /**
@@ -64,15 +66,15 @@ public class SplixBoard extends AdjacencyGraphMap<Point2D, SplixPoint> {
     }
 
     /**
-     * Takes a list of players and puts them in random locations on the board
-     * using the random it is given. Also fills in a 5x5 base around the player.
+     * Takes a list of players and positions and places each player on the position
+     * given. Also fills in a 5x5 base around the player.
      * @param players
      * @param random
      */
-    protected void initPlayers(MutableList<Submission<SplixPlayer>> players, Random random) {
-        for (Submission<SplixPlayer> player : players) {
-            Point2D position = new Point2D(random.nextInt(selfBounds.getRight()),
-                                            random.nextInt(selfBounds.getBottom()));
+    protected void initPlayers(MutableMap<Submission<SplixPlayer>, Point2D> playerPositions_) {
+
+        for (Submission<SplixPlayer> player : playerPositions_.keySet()) {
+            Point2D position = playerPositions_.get(player);
             for (int x = -2; x <= 2; x++) {
                 for (int y = -2; y <= 2; y++) {
                     Point2D pointOfBase = Utils.addPoints(new Point2D(x, y), position);
@@ -85,6 +87,11 @@ public class SplixBoard extends AdjacencyGraphMap<Point2D, SplixPoint> {
         }
     }
 
+    /**
+     * Do not use except for testing. Moves the player from a position to the location. Does
+     * not take into account the trail it might leave behind.
+     */
+    protected void putPlayerInPosition(Submission<SplixPlayer> player, Point2D pos) {playerPositions.put(player, pos);}
 
     /**
      * Get a view of a board. Primarily used for giving a player a view around him.
@@ -94,7 +101,7 @@ public class SplixBoard extends AdjacencyGraphMap<Point2D, SplixPoint> {
     public MutableMap<Point2D, SplixPoint> getSubset(SquareBounds bounds) {
         MutableMap<Point2D, SplixPoint> ret = Maps.mutable.empty();
         for (int x = bounds.getLeft(); x <= bounds.getRight(); x++) {
-            for (int y = bounds.getTop(); y <= bounds.getBottom(); y++) {
+            for (int y = bounds.getBottom(); y <= bounds.getTop(); y++) {
                 Point2D point = new Point2D(x, y);
                 ret.put(point, get(point));
             }
@@ -167,7 +174,7 @@ public class SplixBoard extends AdjacencyGraphMap<Point2D, SplixPoint> {
                 // set contains true if we can't fill in
                 boolean canFillIn = !space.collect(x -> {
                     SplixPoint p = get(x);
-                    return p.getTypeOfOwner() != null || p.getTypeOfClaimer() != null;
+                    return p.getTypeOfOwner() != null || p.getTypeOfClaimer() != null ;
                 }).contains(Boolean.TRUE);
 
                 if (canFillIn) {
@@ -177,8 +184,11 @@ public class SplixBoard extends AdjacencyGraphMap<Point2D, SplixPoint> {
         }
     }
 
+    public int pointsOwnedByPlayer(Submission<SplixPlayer> player) {
+        return locations().count(p -> get(p).getTypeOfOwner() == player);
+    }
 
-    private MutableSet<Point2D> floodSearch(Point2D start, Predicate<Point2D> isAccepted) {
+    public MutableSet<Point2D> floodSearch(Point2D start, Predicate<Point2D> isAccepted) {
         MutableSet<Point2D> ret = Sets.mutable.empty();
         MutableStack<Point2D> nodesToExamine = Stacks.mutable.of(start);
         while (nodesToExamine.notEmpty()) {
@@ -197,7 +207,7 @@ public class SplixBoard extends AdjacencyGraphMap<Point2D, SplixPoint> {
      */
     protected MutableMap<Submission<SplixPlayer>, Submission<SplixPlayer>> getDeathsFromMoves(MutableMap<Submission<?>, Direction> playerMoves) {
         MutableMap<Submission<?>, Point2D> newPlayerPositions = Maps.mutable.empty();
-        MutableMap<Submission<SplixPlayer>, Submission<SplixPlayer>> ret =
+        MutableMap<Submission<SplixPlayer>, Submission<SplixPlayer>> deadPlayers =
                 Maps.mutable.empty();
 
         MutableList<Submission<SplixPlayer>> players = playerPositions.keysView().toList();
@@ -208,8 +218,8 @@ public class SplixBoard extends AdjacencyGraphMap<Point2D, SplixPoint> {
 
             Submission<SplixPlayer> player1 = players.get(i);
             // check trail intersection
-            if (get(playerPositions.get(player1)).isTrail()) {
-                ret.put(get(playerPositions.get(player1)).getTypeOfOwner(), player1);
+            if (get(playerPositions.get(player1)).getTypeOfClaimer() != null) {
+                deadPlayers.put(get(playerPositions.get(player1)).getTypeOfClaimer(), player1);
             }
 
             // all combos of players
@@ -224,20 +234,26 @@ public class SplixBoard extends AdjacencyGraphMap<Point2D, SplixPoint> {
                 if (Utils.realMovementDist(po1, po2) < 3) {// they actually have a chance at colliding
                     if (po1.equals(po2)) {// head butt
                         if (get(pn1).getTypeOfOwner() != player1)// in his land?
-                            ret.put(player1, player2);
+                            deadPlayers.put(player1, player2);
                         if (get(pn2).getTypeOfOwner() != player2)// in his land?
-                            ret.put(player2, player1);
+                            deadPlayers.put(player2, player1);
                     }
 
-                    if (po1.equals(pn2) && po2.equals(pn1)) {// swapping head butt, or player hitting just behind other person's head
-                        ret.put(player1, player2);
-                        ret.put(player2, player1);
+                    if (po1.equals(pn2) || po2.equals(pn1)) {// swapping head butt, or player hitting just behind other person's head FIXME
+                        deadPlayers.put(player1, player2);
+                        deadPlayers.put(player2, player1);
                     }
                 }
             }
         }
-        return ret;
+        return deadPlayers;
     }
+
+    public void applyMoves(MutableMap<Submission<?>, Direction> playerMoves) {
+
+    }
+
+    public SquareBounds getBounds() {return selfBounds;}
 
     public boolean putSafe(Point2D point, SplixPoint item) {
         try {

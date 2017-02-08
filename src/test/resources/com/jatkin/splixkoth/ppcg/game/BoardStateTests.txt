@@ -1,0 +1,38 @@
+# every line with a hash in front of it is a title of anything that follows that does not have a hash sighn
+# so multiple lines act like comments
+# Player one is a x
+# Player two is a +
+# Further mappings can be found in SplixBoardTest#initBoardFromMap
+#floodSearchPassing
++++++++
++++++++
++++++++
++++++++
++++++++
+xxxxxxx
+xxxxxxx
+xxxxxxx
+xxxxxxx
+xxxxxxx
+xxxxxxx
+x     x
+x     x
+x     x
+xxxxxxx
+#floodSearchFailing
++++++++
++++++++
++++++++
++++++++
++++++++
+xxxxxxx
+xxxxxxx
+xxxxxxx
+xxxxxxx
+xxxxxxx
+xxxxxxx
+x     x
+x  +  x
+x     x
+xxxxxxx
+#eof
