@@ -83,7 +83,9 @@ public class SplixBoardTest {
 
     @Test
     public void testKillPlayers() throws Exception {
-
+        SplixBoard board = getBoardWithDimsFromData(new Point2D(6, 12), "killOnePlayerTest");
+        MutableMap<Submission<SplixPlayer>, Point2D> playerPositions =
+                Maps.mutable.of(player1, new Point2D(2, 7), player2, new Point2D(2, 2));
     }
 
     @Test

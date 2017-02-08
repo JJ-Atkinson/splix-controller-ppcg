@@ -35,4 +35,11 @@ x     x
 x  +  x
 x     x
 xxxxxxx
+#killOnePlayerTest
+xxxxxx
+xxxxxx
+xxxxxx
+xxxxxx
+xxxxxx
+
 #eof
