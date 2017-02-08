@@ -37,3 +37,8 @@ task copyTestResources(type: Copy) {
     into "${buildDir}/classes/test"
 }
 processTestResources.dependsOn copyTestResources
+
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '2.0'
+}
