@@ -13,10 +13,6 @@ import org.eclipse.collections.impl.factory.Sets;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import javax.lang.model.element.VariableElement;
-import javax.rmi.CORBA.Util;
-
-import java.io.FileReader;
 import java.util.Scanner;
 import java.util.function.Supplier;
 
@@ -59,21 +55,6 @@ public class SplixBoardTest {
     @Test
     public void testFloodSearch() throws Exception {
 
-        // test a passing fill
-        SplixBoard board = getBoardWithDimsFromData(new Point2D(7, 15), "floodSearchPassing");
-        MutableMap<Submission<SplixPlayer>, Point2D> playerPositions =
-                Maps.mutable.of(player1, new Point2D(2, 7), player2, new Point2D(2, 2));
-        board.initPlayers(playerPositions);
-
-        board.fillPlayerCapturedArea(player1);
-        assertEquals(board.pointsOwnedByPlayer(player1), 70);
-
-        // test a failing fill
-        board = getBoardWithDimsFromData(new Point2D(7, 15), "floodSearchFailing");
-        board.initPlayers(playerPositions);
-
-        board.fillPlayerCapturedArea(player1);
-        assertEquals(board.pointsOwnedByPlayer(player1), 55);
     }
 
     @Test
@@ -83,24 +64,85 @@ public class SplixBoardTest {
 
     @Test
     public void testKillPlayers() throws Exception {
-        SplixBoard board = getBoardWithDimsFromData(new Point2D(6, 12), "killOnePlayerTest");
-        MutableMap<Submission<SplixPlayer>, Point2D> playerPositions =
-                Maps.mutable.of(player1, new Point2D(2, 7), player2, new Point2D(2, 2));
+//        SplixBoard board = getBoardWithDimsFromData(new Point2D(6, 12), "killOnePlayerTest");
+//        MutableMap<Submission<SplixPlayer>, Point2D> playerPositions =
+//                Maps.mutable.of(player1, new Point2D(2, 7), player2, new Point2D(2, 2));
     }
 
     @Test
     public void testCheckPlayerTrailsConnected() throws Exception {
-
     }
 
     @Test
     public void testFillPlayerCapturedArea() throws Exception {
+        // test a passing fill
+        SplixBoard board = getBoardWithDimsFromData(new Point2D(7, 15), "floodSearchPassing");
+        MutableMap<Submission<SplixPlayer>, Point2D> playerPositions =
+                Maps.mutable.of(player1, new Point2D(2, 7), player2, new Point2D(2, 2));
+        board.initPlayers(playerPositions);
 
+        board.fillPlayerCapturedArea(player1);
+        assertEquals(board.countPointsOwnedByPlayer(player1), 69);
+
+        // test a failing fill
+        board = getBoardWithDimsFromData(new Point2D(7, 15), "floodSearchFailing");
+        board.initPlayers(playerPositions);
+
+        board.fillPlayerCapturedArea(player1);
+        assertEquals(board.countPointsOwnedByPlayer(player1), 57);
     }
 
     @Test
     public void testGetDeathsFromMoves() throws Exception {
+//        System.err.println(maps );
+        // death by line cross
+        SplixBoard board = getBoardWithDimsFromData(new Point2D(6, 13), "killPlayerTestOddSpacesAway");
 
+        board.applyMoves(Maps.mutable.of(player1, Direction.South, player2, Direction.North));
+        board.applyMoves(Maps.mutable.of(player1, Direction.South, player2, Direction.West));
+        assert(board.getDeathsFromMoves(Maps.mutable.of(player1, Direction.South, player2, Direction.West)).
+                equals(Maps.mutable.of(player2, player1)));
+
+        // death by line cross just behind other's head
+        board = getBoardWithDimsFromData(new Point2D(6, 13), "killPlayerTestEvenSpacesAway");
+
+        board.applyMoves(Maps.mutable.of(player1, Direction.South, player2, Direction.North));
+        assert(board.getDeathsFromMoves(Maps.mutable.of(player1, Direction.South, player2, Direction.West)).
+                equals(Maps.mutable.of(player1, player2)));
+        
+        
+        // death by odd head butt (both end up on the same position)
+        board = getBoardWithDimsFromData(new Point2D(6, 13), "killPlayerTestOddSpacesAway");
+
+        board.applyMoves(Maps.mutable.of(player1, Direction.East, player2, Direction.West));
+        board.applyMoves(Maps.mutable.of(player1, Direction.South, player2, Direction.North));
+        assert(board.getDeathsFromMoves(Maps.mutable.of(player1, Direction.South, player2, Direction.North)).
+                equals(Maps.mutable.of(player2, player1, player1, player2)));
+        
+        // death by even head butt (players flip positions)
+        board = getBoardWithDimsFromData(new Point2D(6, 13), "killPlayerTestEvenSpacesAway");
+
+        board.applyMoves(Maps.mutable.of(player1, Direction.East, player2, Direction.North));
+        board.applyMoves(Maps.mutable.of(player1, Direction.South, player2, Direction.North));
+        assert(board.getDeathsFromMoves(Maps.mutable.of(player1, Direction.South, player2, Direction.North)).
+                equals(Maps.mutable.of(player2, player1, player1, player2)));
+        
+        // death by wall
+        board = getBoardWithDimsFromData(new Point2D(6, 13), "killPlayerTestEvenSpacesAway");
+
+        board.applyMoves(Maps.mutable.of(player1, Direction.South, player2, Direction.East));
+        assert(board.getDeathsFromMoves(Maps.mutable.of(player1, Direction.South, player2, Direction.East)).
+                equals(Maps.mutable.of(player2, player2)));
+        
+    }
+
+
+    @Test
+    public void testInitPlayers() throws Exception {
+        SplixBoard board = new SplixBoard(new SquareBounds(new Point2D(0, 0), new Point2D(10, 10)));
+        board.initPlayers(Maps.mutable.of(player1, new Point2D(3, 2), player2, new Point2D(7, 7)));
+//        showBoard(board);
+        assertEquals(board.countPointsOwnedByPlayer(player1), 25);
     }
 
 

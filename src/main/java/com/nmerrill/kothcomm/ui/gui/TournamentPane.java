@@ -59,7 +59,7 @@ public class TournamentPane<T extends AbstractPlayer<T>, U extends AbstractGame<
     public void addGame(){
         U game = tournamentRunner.createGame();
         game.start();
-        Tab tab = new Tab("Game "+games.getTabs().size(),gamePane.apply(game));
+        Tab tab = new Tab("Game "+games.getTabs().size(), gamePane.apply(game));
         games.getTabs().add(tab);
         tabs.put(game, tab);
     }

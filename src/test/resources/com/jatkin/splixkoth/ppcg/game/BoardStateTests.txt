@@ -15,9 +15,9 @@ xxxxxxx
 xxxxxxx
 xxxxxxx
 xxxxxxx
-x     x
-x     x
-x     x
+xx    x
+ x    x
+xx    x
 xxxxxxx
 #floodSearchFailing
 +++++++
@@ -31,15 +31,36 @@ xxxxxxx
 xxxxxxx
 xxxxxxx
 xxxxxxx
-x     x
-x  +  x
-x     x
+xx    x
+ x +  x
+xx    x
 xxxxxxx
-#killOnePlayerTest
+#killPlayerTestOddSpacesAway
 xxxxxx
 xxxxxx
 xxxxxx
 xxxxxx
 xxxxxx
-
+  X   
+      
+    - 
+++++++
+++++++
+++++++
+++++++
+++++++
+#killPlayerTestEvenSpacesAway
+xxxxxx
+xxxxxx
+xxxxxx
+xxxxxx
+xxxxxx
+   X  
+      
+    - 
+++++++
+++++++
+++++++
+++++++
+++++++
 #eof

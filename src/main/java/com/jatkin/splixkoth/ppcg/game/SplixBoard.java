@@ -184,7 +184,7 @@ public class SplixBoard extends AdjacencyGraphMap<Point2D, SplixPoint> {
         }
     }
 
-    public int pointsOwnedByPlayer(Submission<SplixPlayer> player) {
+    public int countPointsOwnedByPlayer(Submission<SplixPlayer> player) {
         return locations().count(p -> get(p).getTypeOfOwner() == player);
     }
 
@@ -213,44 +213,78 @@ public class SplixBoard extends AdjacencyGraphMap<Point2D, SplixPoint> {
         MutableList<Submission<SplixPlayer>> players = playerPositions.keysView().toList();
         players.forEach(player -> newPlayerPositions.put(player,
                         Utils.addPoints(playerPositions.get(player), playerMoves.get(player).vector)));
+        
+        MutableSet<Submission<SplixPlayer>> playersThatCanDie = players.select(p -> get(newPlayerPositions.get(p)).getTypeOfOwner() != p).toSet();
 
         for (int i = 0; i < players.size(); i++) {
 
-            Submission<SplixPlayer> player1 = players.get(i);
+            Submission<SplixPlayer> currentPlayer = players.get(i);
+            
             // check trail intersection
-            if (get(playerPositions.get(player1)).getTypeOfClaimer() != null) {
-                deadPlayers.put(get(playerPositions.get(player1)).getTypeOfClaimer(), player1);
+            Submission<SplixPlayer> newPositionClaimer = get(playerPositions.get(currentPlayer)).getTypeOfClaimer();
+            if (newPositionClaimer != null && playersThatCanDie.contains(newPositionClaimer)) {
+                deadPlayers.put(newPositionClaimer, currentPlayer);
             }
+            
+            if (outOfBounds(newPlayerPositions.get(currentPlayer)))
+                deadPlayers.put(currentPlayer, currentPlayer);
 
             // all combos of players
+            // used to check if any of their positions are close enough to kill
             for (int j = i+1; j < players.size(); j++) {
-                Submission<SplixPlayer> player2 = players.get(j);
+                // need to check for 3 types of death: death by swapping head butt, death
+                // by hitting same spot, and death by being hit just behind the head. Death
+                // by being hit just behind the head has an interesting edge case when the
+                // new position is inside a player's area but his old position is occupied
+                // by another player. This is rolled into `playersThatCanDie`.
+                
+                Submission<SplixPlayer> otherPlayer = players.get(j);
                 // point old, point new
-                Point2D po1 = playerPositions.get(player1);
-                Point2D po2 = playerPositions.get(player2);
-                Point2D pn1 = newPlayerPositions.get(player1);
-                Point2D pn2 = newPlayerPositions.get(player2);
+                Point2D currPlayerO = playerPositions.get(currentPlayer);
+                Point2D otherPlayerO = playerPositions.get(otherPlayer);
+                Point2D currPlayerN = newPlayerPositions.get(currentPlayer);
+                Point2D otherPlayerN = newPlayerPositions.get(otherPlayer);
 
-                if (Utils.realMovementDist(po1, po2) < 3) {// they actually have a chance at colliding
-                    if (po1.equals(po2)) {// head butt
-                        if (get(pn1).getTypeOfOwner() != player1)// in his land?
-                            deadPlayers.put(player1, player2);
-                        if (get(pn2).getTypeOfOwner() != player2)// in his land?
-                            deadPlayers.put(player2, player1);
+                if (Utils.realMovementDist(currPlayerO, otherPlayerO) < 3) {// they actually have a chance at colliding
+                    if (currPlayerO.equals(otherPlayerO)) {// normal head butt, both should die
+                        if (playersThatCanDie.contains(currentPlayer))
+                            deadPlayers.put(currentPlayer, otherPlayer);
+                        if (playersThatCanDie.contains(otherPlayer))
+                            deadPlayers.put(otherPlayer, currentPlayer);
                     }
 
-                    if (po1.equals(pn2) || po2.equals(pn1)) {// swapping head butt, or player hitting just behind other person's head FIXME
-                        deadPlayers.put(player1, player2);
-                        deadPlayers.put(player2, player1);
-                    }
+                    // hit behind head, could be swapping head butt
+                    if (otherPlayerN.equals(currPlayerO) && playersThatCanDie.contains(currentPlayer))
+                        deadPlayers.put(currentPlayer, otherPlayer);
+                    
+                    if (currPlayerN.equals(otherPlayerO) && playersThatCanDie.contains(otherPlayer)) 
+                        deadPlayers.put(otherPlayer, currentPlayer);
+                    
                 }
             }
         }
         return deadPlayers;
     }
 
+    /**
+     * Apply the moves given. If the original position of a player was not in his area,
+     * the position is updated to say that it is claimed by the player.
+     * @param playerMoves
+     */
     public void applyMoves(MutableMap<Submission<?>, Direction> playerMoves) {
+        MutableMap<Submission<SplixPlayer>, Point2D> newPlayerPositions = Maps.mutable.empty();
 
+        MutableList<Submission<SplixPlayer>> players = playerPositions.keysView().toList();
+        players.forEach(player -> newPlayerPositions.put(player,
+                Utils.addPoints(playerPositions.get(player), playerMoves.get(player).vector)));
+
+        newPlayerPositions.forEach((player, nPos) -> {
+            Point2D oPos = playerPositions.get(player);
+            if (get(oPos).getTypeOfOwner() != player)
+                get(oPos).setTypeOfClaimer(player);
+
+            playerPositions.put(player, nPos);
+        });
     }
 
     public SquareBounds getBounds() {return selfBounds;}
