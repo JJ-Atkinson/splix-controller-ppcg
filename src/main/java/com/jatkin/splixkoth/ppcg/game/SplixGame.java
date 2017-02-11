@@ -14,8 +14,16 @@ import org.eclipse.collections.impl.factory.Maps;
  */
 public class SplixGame extends IteratedGame<SplixPlayer> {
 
+    private int iterations;
+
     public SplixGame(int iterations) {
-        super(iterations);
+        super();
+        this.iterations = iterations;
+    }// FIXME
+
+    @Override
+    public int getNumIterations() {
+        return 0;// FIXME
     }
 
     @Override

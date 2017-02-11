@@ -64,6 +64,10 @@ public class SplixBoard extends AdjacencyGraphMap<Point2D, SplixPoint> {
                 break;
         }
     }
+    
+    protected MutableMap<Submission<SplixPlayer>, Point2D> getPlayerPositions() {
+        return playerPositions.clone();
+    }
 
     /**
      * Takes a list of players and positions and places each player on the position
@@ -259,7 +263,6 @@ public class SplixBoard extends AdjacencyGraphMap<Point2D, SplixPoint> {
                     
                     if (currPlayerN.equals(otherPlayerO) && playersThatCanDie.contains(otherPlayer)) 
                         deadPlayers.put(otherPlayer, currentPlayer);
-                    
                 }
             }
         }

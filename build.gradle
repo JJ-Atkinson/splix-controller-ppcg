@@ -11,6 +11,7 @@
 // Apply the java plugin to add support for Java
 apply plugin: 'java'
 
+name = 'SplixKoTH'
 
 // In this section you declare where to find the dependencies of your project
 repositories {
@@ -40,20 +41,11 @@ task copyTestResources(type: Copy) {
 }
 processTestResources.dependsOn copyTestResources
 
-
-task wrapper(type: Wrapper) {
-    gradleVersion = '3.3'
-}
-
-sourceSets {
-    main {
-        java {
-            srcDir 'src'
-        }
-    }
-    test {  
-        java {
-            srcDir 'test'
-        }
+test {
+    useTestNG()
+    
+    // listen to events in the test execution lifecycle
+    beforeTest { descriptor ->
+        logger.lifecycle("Running test: " + descriptor)
     }
 }
