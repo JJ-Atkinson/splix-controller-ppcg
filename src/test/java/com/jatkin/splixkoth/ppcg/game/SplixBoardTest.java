@@ -23,13 +23,13 @@ import static org.testng.Assert.*;
  */
 public class SplixBoardTest {
 
-    Submission<SplixPlayer> player1 = new Submission<>("Null Player 1", null);
-    Submission<SplixPlayer> player2 = new Submission<>("Null Player 2", null);
+    private Submission<SplixPlayer> player1 = new Submission<>("Null Player 1", null);
+    private Submission<SplixPlayer> player2 = new Submission<>("Null Player 2", null);
 
-    MutableMap<String, MutableList<String>> maps = Maps.mutable.empty();
+    private MutableMap<String, MutableList<String>> maps = Maps.mutable.empty();
 
-    SplixPoint player1OwnedPoint = new SplixPoint();
-    SplixPoint player2OwnedPoint = new SplixPoint();
+    private SplixPoint player1OwnedPoint = new SplixPoint();
+    private SplixPoint player2OwnedPoint = new SplixPoint();
 
 
     MutableSet<Point2D> pointsFromList(int[] positions) {
@@ -99,6 +99,7 @@ public class SplixBoardTest {
         SplixBoard board = getBoardWithDimsFromData(new Point2D(6, 13), "killPlayerTestOddSpacesAway");
 
         board.applyMoves(Maps.mutable.of(player1, Direction.South, player2, Direction.North));
+        showBoard(board);
         board.applyMoves(Maps.mutable.of(player1, Direction.South, player2, Direction.West));
         showBoard(board);
         assert(board.getDeathsFromMoves(Maps.mutable.of(player1, Direction.South, player2, Direction.West)).
@@ -210,12 +211,22 @@ public class SplixBoardTest {
         symbolMapping.put(new SplixPoint(player2, player1), '2');
         symbolMapping.put(new SplixPoint(null, player1), '3');
         symbolMapping.put(new SplixPoint(null, player2), '4');
+        MutableMap<Submission<SplixPlayer>, Point2D> playerPositions = board.getPlayerPositions();
 
         StringBuilder sb = new StringBuilder();
         sb.append("---\n");
         for (int y = 0; y < board.getBounds().getTop(); y++) {
             for (int x = 0; x < board.getBounds().getRight(); x++) {
-                sb.append(symbolMapping.get(board.get(new Point2D(x, y))));
+                Point2D point = new Point2D(x, y);
+                MutableMap<Submission<SplixPlayer>, Point2D> playerPosSame = playerPositions.select((player, pos) -> pos.equals(point));
+                if (playerPosSame.notEmpty()) {
+                    if (playerPosSame.keySet().contains(player1))
+                        sb.append('#');
+                    else
+                        sb.append('-');
+                } else
+                    sb.append(symbolMapping.get(board.get(point)));
+                
             }
             sb.append("|\n");
         }
