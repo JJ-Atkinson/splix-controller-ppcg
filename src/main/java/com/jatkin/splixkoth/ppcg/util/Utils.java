@@ -20,18 +20,5 @@ public class Utils {
         return Math.abs(p1.getX() - p2.getX()) +  Math.abs(p1.getY() - p2.getY());
     }
 
-    public static String showSplixBoard(SplixBoard board, MutableMap<Submission<SplixPlayer>, String> playerSymbols) {
-        StringBuilder sb = new StringBuilder();
-        sb.append("---\n");
-        for (int y = 0; y < board.getBounds().getTop(); y++) {
-            for (int x = 0; x < board.getBounds().getRight(); x++) {
-                sb.append(playerSymbols.get(board.get(new Point2D(x, y)).getTypeOfOwner()));
-//                System.err.println(board.get(new Point2D(x, y)).getTypeOfOwner());
-            }
-            sb.append("|\n");
-        }
-        sb.append("---");
-        System.err.println(sb);
-        return sb.toString();
-    }
+
 }

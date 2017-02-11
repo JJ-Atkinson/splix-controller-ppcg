@@ -17,6 +17,7 @@ repositories {
     // Use 'jcenter' for resolving your dependencies.
     // You can declare any Maven/Ivy/file repository here.
     jcenter()
+    maven { url "https://jitpack.io" }
 }
 
 // In this section you declare the dependencies for your production and test code
@@ -26,6 +27,7 @@ dependencies {
     compile 'org.jsoup:jsoup:1.9.1'
     compile 'org.eclipse.collections:eclipse-collections-api:8.0.0'
     compile 'org.eclipse.collections:eclipse-collections:8.0.0'
+    compile 'com.github.nathanmerrill:KoTHComm:1.0.0'
     compile 'com.beust:jcommander:1.48'
     testCompile 'org.testng:testng:6.8'
     compile files("${System.properties['java.home']}/../lib/tools.jar")
@@ -40,5 +42,18 @@ processTestResources.dependsOn copyTestResources
 
 
 task wrapper(type: Wrapper) {
-    gradleVersion = '2.0'
+    gradleVersion = '3.3'
+}
+
+sourceSets {
+    main {
+        java {
+            srcDir 'src'
+        }
+    }
+    test {  
+        java {
+            srcDir 'test'
+        }
+    }
 }

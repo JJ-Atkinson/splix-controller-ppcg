@@ -100,6 +100,7 @@ public class SplixBoardTest {
 
         board.applyMoves(Maps.mutable.of(player1, Direction.South, player2, Direction.North));
         board.applyMoves(Maps.mutable.of(player1, Direction.South, player2, Direction.West));
+        showBoard(board);
         assert(board.getDeathsFromMoves(Maps.mutable.of(player1, Direction.South, player2, Direction.West)).
                 equals(Maps.mutable.of(player2, player1)));
 
@@ -200,10 +201,28 @@ public class SplixBoardTest {
     }
 
     private void showBoard(SplixBoard board) {
-        MutableMap<Submission<SplixPlayer>, String> playerStringMapping =
-                Maps.mutable.of(player1, "+", player2, "x", null, " ");
-        System.err.println(Utils.showSplixBoard(board, playerStringMapping));
+
+        MutableMap<SplixPoint, Character> symbolMapping = Maps.mutable.empty();
+        symbolMapping.put(new SplixPoint(player1, null), 'x');
+        symbolMapping.put(new SplixPoint(player2, null), '+');
+        symbolMapping.put(new SplixPoint(null, null), ' ');
+        symbolMapping.put(new SplixPoint(player1, player2), '1');
+        symbolMapping.put(new SplixPoint(player2, player1), '2');
+        symbolMapping.put(new SplixPoint(null, player1), '3');
+        symbolMapping.put(new SplixPoint(null, player2), '4');
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("---\n");
+        for (int y = 0; y < board.getBounds().getTop(); y++) {
+            for (int x = 0; x < board.getBounds().getRight(); x++) {
+                sb.append(symbolMapping.get(board.get(new Point2D(x, y))));
+            }
+            sb.append("|\n");
+        }
+        sb.append("---");
+        System.err.println(sb);
     }
+
 
     private SplixBoard getBoardWithDimsFromData(Point2D dims, String whichData) {
         SplixBoard board = new SplixBoard(new SquareBounds(
