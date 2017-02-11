@@ -7,11 +7,9 @@
  * user guide available at https://docs.gradle.org/3.0/userguide/tutorial_java_projects.html
  */
 
-
 // Apply the java plugin to add support for Java
 apply plugin: 'java'
 
-projectName = 'SplixKoTH'
 
 // In this section you declare where to find the dependencies of your project
 repositories {
