@@ -183,11 +183,15 @@ class SplixBoardTestSpock extends Specification {
         given: "a board where the player has connected"
         def board = getBoardWithDimsFromData(new Point2D(8, 4), trailConnectedData)
         board.applyMoves(Maps.mutable.of(player1, Direction.North, player2, Direction.East))
+        // get around a behavior specific to loading data in from a string
+        // the point where the player is is owned by him - regardless if this is correct
+        // so this is fixed by changing that point.
+        board.get(new Point2D(8, 2)).setTypeOfClaimer(player1)
+        board.get(new Point2D(8, 2)).setTypeOfOwner(null)
         board.checkPlayerTrailsConnected()
-        showBoard(board)
         
         expect: "the board to be filled in and the trail to be converted"
-        board.countPointsOwnedByPlayer(player1) == 20
+        board.countPointsOwnedByPlayer(player1) == 36
     }
     
     
