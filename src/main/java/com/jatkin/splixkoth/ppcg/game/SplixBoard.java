@@ -14,6 +14,7 @@ import org.eclipse.collections.impl.factory.Maps;
 import org.eclipse.collections.impl.factory.Sets;
 import org.eclipse.collections.impl.factory.Stacks;
 
+import java.util.Collection;
 import java.util.Random;
 import java.util.function.Predicate;
 
@@ -39,13 +40,14 @@ public class SplixBoard extends AdjacencyGraphMap<Point2D, SplixPoint> {
     public SplixBoard(SquareBounds bounds) {
         super(bounds, new VonNeumannNeighborhood());
         selfBounds = bounds;
+
+        fillMapWithDefault();
+        
         borderPoints =
             locations().select(p -> p.getX() == selfBounds.getLeft()
                                     || p.getX() == selfBounds.getRight()
                                     || p.getY() == selfBounds.getTop()
                                     || p.getY() == selfBounds.getBottom());
-
-        fillMapWithDefault();
     }
 
     /**
@@ -160,6 +162,8 @@ public class SplixBoard extends AdjacencyGraphMap<Point2D, SplixPoint> {
         MutableSet<Point2D> alreadyOwnedSpace = allPoints.select(x -> get(x).getTypeOfOwner() == whoToCheck);
         MutableSet<Point2D> checkSpace = allPoints.difference(alreadyOwnedSpace);
         MutableSet<MutableSet<Point2D>> spacesToExamine = Sets.mutable.empty();
+        MutableSet<Point2D> otherPlayerPositionsSet = Sets.mutable.ofAll(playerPositions.values());
+        otherPlayerPositionsSet.remove(playerPositions.get(whoToCheck));
 
         while (checkSpace.notEmpty()) {
             Point2D start = checkSpace.iterator().next();
@@ -174,12 +178,9 @@ public class SplixBoard extends AdjacencyGraphMap<Point2D, SplixPoint> {
         for (MutableSet<Point2D> space : spacesToExamine) {
             // no points intersect boarder - no area that can be filled can intersect the boarder
             if (space.intersect(borderPoints).size() == 0) {
-                // if the space intersects anything at all, we can't fill in
+                // if the space intersects any other players, we can't fill in
                 // set contains true if we can't fill in
-                boolean canFillIn = !space.collect(x -> {
-                    SplixPoint p = get(x);
-                    return p.getTypeOfOwner() != null || p.getTypeOfClaimer() != null ;
-                }).contains(Boolean.TRUE);
+                boolean canFillIn = space.intersect(otherPlayerPositionsSet).size() == 0;
 
                 if (canFillIn) {
                     space.forEach(p -> get(p).setTypeOfOwner(whoToCheck));
@@ -218,20 +219,24 @@ public class SplixBoard extends AdjacencyGraphMap<Point2D, SplixPoint> {
         players.forEach(player -> newPlayerPositions.put(player,
                         Utils.addPoints(playerPositions.get(player), playerMoves.get(player).vector)));
         
-        MutableSet<Submission<SplixPlayer>> playersThatCanDie = players.select(p -> get(newPlayerPositions.get(p)).getTypeOfOwner() != p).toSet();
+        players.forEach(p -> {
+            if (outOfBounds(newPlayerPositions.get(p)))
+                deadPlayers.put(p, p);
+        });
+        players = players.select(p -> !deadPlayers.keySet().contains(p));// remove wall hitters
+        MutableSet<Submission<SplixPlayer>> playersThatCanDie = players
+                         .select(p -> get(newPlayerPositions.get(p)).getTypeOfOwner() != p).toSet();
 
         for (int i = 0; i < players.size(); i++) {
 
             Submission<SplixPlayer> currentPlayer = players.get(i);
             
             // check trail intersection
-            Submission<SplixPlayer> newPositionClaimer = get(playerPositions.get(currentPlayer)).getTypeOfClaimer();
+            Submission<SplixPlayer> newPositionClaimer = get(newPlayerPositions.get(currentPlayer)).getTypeOfClaimer();
             if (newPositionClaimer != null && playersThatCanDie.contains(newPositionClaimer)) {
                 deadPlayers.put(newPositionClaimer, currentPlayer);
             }
             
-            if (outOfBounds(newPlayerPositions.get(currentPlayer)))
-                deadPlayers.put(currentPlayer, currentPlayer);
 
             // all combos of players
             // used to check if any of their positions are close enough to kill
@@ -250,7 +255,7 @@ public class SplixBoard extends AdjacencyGraphMap<Point2D, SplixPoint> {
                 Point2D otherPlayerN = newPlayerPositions.get(otherPlayer);
 
                 if (Utils.realMovementDist(currPlayerO, otherPlayerO) < 3) {// they actually have a chance at colliding
-                    if (currPlayerO.equals(otherPlayerO)) {// normal head butt, both should die
+                    if (currPlayerN.equals(otherPlayerN)) {// normal head butt, both should die
                         if (playersThatCanDie.contains(currentPlayer))
                             deadPlayers.put(currentPlayer, otherPlayer);
                         if (playersThatCanDie.contains(otherPlayer))
