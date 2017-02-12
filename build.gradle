@@ -9,6 +9,7 @@
 
 // Apply the java plugin to add support for Java
 apply plugin: 'java'
+apply plugin: 'groovy'
 
 
 // In this section you declare where to find the dependencies of your project
@@ -29,6 +30,7 @@ dependencies {
     compile 'com.github.nathanmerrill:KoTHComm:1.0.0'
     compile 'com.beust:jcommander:1.48'
     testCompile 'org.testng:testng:6.8'
+    testCompile 'org.spockframework:spock-core:1.1-groovy-2.4-rc-2'
     compile files("${System.properties['java.home']}/../lib/tools.jar")
 
 }
