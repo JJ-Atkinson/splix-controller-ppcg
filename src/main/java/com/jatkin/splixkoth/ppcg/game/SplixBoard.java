@@ -15,7 +15,9 @@ import org.eclipse.collections.impl.factory.Sets;
 import org.eclipse.collections.impl.factory.Stacks;
 
 import java.util.Collection;
+import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 import java.util.function.Predicate;
 
 /**
@@ -67,7 +69,7 @@ public class SplixBoard extends AdjacencyGraphMap<Point2D, SplixPoint> {
         }
     }
     
-    protected MutableMap<Submission<SplixPlayer>, Point2D> getPlayerPositions() {
+    public MutableMap<Submission<SplixPlayer>, Point2D> getPlayerPositions() {
         return playerPositions.clone();
     }
 
@@ -101,6 +103,8 @@ public class SplixBoard extends AdjacencyGraphMap<Point2D, SplixPoint> {
 
     /**
      * Get a view of a board. Primarily used for giving a player a view around him.
+     * Does not perform bound checking - will throw error if the given bounds are 
+     * outside the are of the board.
      * @param bounds
      * @return
      */
@@ -120,7 +124,7 @@ public class SplixBoard extends AdjacencyGraphMap<Point2D, SplixPoint> {
      * run for all players.
      * @param players
      */
-    public void killPlayers(MutableSet<Submission<SplixPlayer>> players) {
+    public void killPlayers(Set<Submission<SplixPlayer>> players) {
         for (Submission<SplixPlayer> player : players) {
             // this makes me sad. so inefficient.
             for (Point2D point : locations().select(x -> get(x).getTypeOfOwner() == player))
@@ -279,7 +283,7 @@ public class SplixBoard extends AdjacencyGraphMap<Point2D, SplixPoint> {
      * the position is updated to say that it is claimed by the player.
      * @param playerMoves
      */
-    public void applyMoves(MutableMap<Submission<?>, Direction> playerMoves) {
+    public void applyMoves(Map<Submission<?>, Direction> playerMoves) {
         MutableMap<Submission<SplixPlayer>, Point2D> newPlayerPositions = Maps.mutable.empty();
 
         MutableList<Submission<SplixPlayer>> players = playerPositions.keysView().toList();
