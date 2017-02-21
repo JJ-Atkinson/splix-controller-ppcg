@@ -176,8 +176,6 @@ public class SplixBoard extends AdjacencyGraphMap<Point2D, SplixPoint> {
             checkSpace.removeAll(connectedPoints);
         }
 
-        // efficiency concern, if only one check space exists then we can return
-        if (spacesToExamine.size() == 1) return;
 
         for (MutableSet<Point2D> space : spacesToExamine) {
             // no points intersect boarder - no area that can be filled can intersect the boarder
