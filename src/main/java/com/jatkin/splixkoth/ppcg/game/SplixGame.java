@@ -1,7 +1,9 @@
 package com.jatkin.splixkoth.ppcg.game;
 
+import com.jatkin.splixkoth.ppcg.SplixSettings;
 import com.jatkin.splixkoth.ppcg.game.readonly.ReadOnlyBoard;
 import com.jatkin.splixkoth.ppcg.game.readonly.ReadOnlyGame;
+import com.jatkin.splixkoth.ppcg.util.Utils;
 import com.nmerrill.kothcomm.game.games.AbstractGame;
 import com.nmerrill.kothcomm.game.games.IteratedGame;
 import com.nmerrill.kothcomm.game.maps.Point2D;
@@ -11,6 +13,7 @@ import com.nmerrill.kothcomm.game.scoring.Scoreboard;
 import org.eclipse.collections.api.map.MutableMap;
 import org.eclipse.collections.api.set.MutableSet;
 import org.eclipse.collections.impl.factory.Maps;
+import org.eclipse.collections.impl.factory.Sets;
 
 import java.util.Set;
 
@@ -20,26 +23,25 @@ import java.util.Set;
 public class SplixGame extends IteratedGame<SplixPlayer> {
 
     private int size;
-    private int iterations;
-    private final int scoreForKill = 300;
+    private final int scoreForKill = SplixSettings.pointsForKill;
     
     private SplixBoard board;
     private Scoreboard<Submission<SplixPlayer>> scoreboard;
-
-    public SplixGame(int size, int iterations) {
-        super();
+    private final MutableSet<Submission<SplixPlayer>> deadPlayers = Sets.mutable.empty();
+    
+    public SplixGame(int size) {
         this.size = size;
-        this.iterations = iterations;
-    }// FIXME
+    }
 
     @Override
     public int getNumIterations() {
-        return 0;// FIXME
+        return SplixSettings.gameIterationsCount;// FIXME
     }
     
 
     @Override
-    protected void setup() {
+    public void setup() {
+        super.setup();
         board = new SplixBoard(new SquareBounds(size));
         board.initPlayers(getPlayerPositions());
         scoreboard = new Scoreboard<>();
@@ -49,20 +51,26 @@ public class SplixGame extends IteratedGame<SplixPlayer> {
     private MutableMap<Submission<SplixPlayer>, Point2D> getPlayerPositions() {
         MutableMap<Submission<SplixPlayer>, Point2D> ret = Maps.mutable.empty();
         players.forEach(p -> 
-            ret.put(p, new Point2D(random.nextInt(board.getBounds().getLeft()-1), random.nextInt(board.getBounds().getBottom() - 1)))
+            ret.put(p.getType(), new Point2D(random.nextInt(board.getBounds().getRight()-1), random.nextInt(board.getBounds().getTop() - 1)))
         );
         return ret;
     }
 
+    public SplixBoard getBoard() {return board;}
     @Override
-    protected void step() {
+    public void step() {
         super.step();
         
         MutableMap<Submission<?>, Direction> playerMoves = Maps.mutable.empty();
-        players.forEach(each -> playerMoves.put(each.getType(), each.makeMove(getReadOnlyGame(), null)));
+
+        players.select(p -> !deadPlayers.contains(p.getType())).forEach(each -> 
+                playerMoves.put(each.getType(),
+                        each.makeMove(new ReadOnlyGame(this),
+                                 getReadOnlyBoardForPosition(board.getPlayerPositions().get(each.getType())))));
         
         MutableMap<Submission<SplixPlayer>, Submission<SplixPlayer>> deaths = board.getDeathsFromMoves(playerMoves);
         board.killPlayers(deaths.keySet());
+        deadPlayers.addAll(deaths.keySet());
         deaths.forEach((p, killer) -> scoreboard.addScore(killer, scoreForKill));
         
         board.applyMoves(playerMoves);
@@ -73,10 +81,16 @@ public class SplixGame extends IteratedGame<SplixPlayer> {
             players.forEach(p -> board.fillPlayerCapturedArea(p.getType()));
     }
 
-    
-    private ReadOnlyGame getReadOnlyGame() {return null; // FIXME
+    private ReadOnlyBoard getReadOnlyBoardForPosition(Point2D pos) {
+        SquareBounds area = new SquareBounds(
+                Utils.addPoints(pos, new Point2D(-SplixSettings.viewingAreaSize.getX()/2,
+                        -SplixSettings.viewingAreaSize.getY()/2)),
+                Utils.addPoints(pos, new Point2D(SplixSettings.viewingAreaSize.getX()/2,
+                        SplixSettings.viewingAreaSize.getY()/2))
+        );
+        
+        return new ReadOnlyBoard(this.board, area);
     }
-
     
     private boolean hasComputedScores = false;
 

@@ -1,9 +1,11 @@
-package com.jakin.splixkoth.ppcg.game
+package com.jatkin.splixkoth.ppcg.game
 
 import com.jatkin.splixkoth.ppcg.game.Direction
 import com.jatkin.splixkoth.ppcg.game.SplixBoard
+import com.jatkin.splixkoth.ppcg.game.SplixGame
 import com.jatkin.splixkoth.ppcg.game.SplixPlayer
 import com.jatkin.splixkoth.ppcg.game.SplixPoint
+import com.jatkin.splixkoth.ppcg.players.TrapBot
 import com.nmerrill.kothcomm.game.maps.Point2D
 import com.nmerrill.kothcomm.game.maps.graphmaps.bounds.point2D.SquareBounds
 import com.nmerrill.kothcomm.game.players.Submission
@@ -14,88 +16,88 @@ import spock.lang.*
 
 class SplixBoardTestSpock extends Specification {
     
-    @Shared  def player1 = new Submission("Null Player 1", null)
+    @Shared def player1 = new Submission("Null Player 1", null)
     @Shared def player2 = new Submission("Null Player 2", null)
     def playersEvenSpacesAwayData = 
-             """xxxxxx
-               |xxxxxx
-               |xxxxxx
-               |xxxxxx
-               |xxxxxx
-               |   #  
-               |      
+             """++++++
+               |++++++
+               |++++++
+               |++++++
+               |++++++
                |    - 
-               |++++++
-               |++++++
-               |++++++
-               |++++++
-               |++++++""".stripMargin()
+               |      
+               |   #  
+               |xxxxxx
+               |xxxxxx
+               |xxxxxx
+               |xxxxxx
+               |xxxxxx""".stripMargin()
     
     def playersOddSpacesAwayData = 
-            """xxxxxx
-              |xxxxxx
-              |xxxxxx
-              |xxxxxx
-              |xxxxxx
-              |  #   
-              |      
+            """++++++
+              |++++++
+              |++++++
+              |++++++
+              |++++++
               |    - 
-              |++++++
-              |++++++
-              |++++++
-              |++++++
-              |++++++""".stripMargin()
+              |      
+              |  #   
+              |xxxxxx
+              |xxxxxx
+              |xxxxxx
+              |xxxxxx
+              |xxxxxx""".stripMargin()
     
     def failingFloodSearchData = 
-            """+++++++
-              |+++++++
-              |+++++++
-              |+++++++
-              |+++++++
-              |xxxxxxx
-              |xxxxxxx
-              |xxxxxxx
-              |xxxxxxx
-              |xxxxxxx
-              |xxxxxxx
+            """xxxxxxx
               |   x  x
               |   x- x
               |   x  x
-              |xxxxxxx""".stripMargin()
+              |xxxxxxx
+              |xxxxxxx
+              |xxxxxxx
+              |xxxxxxx
+              |xxxxxxx
+              |xxxxxxx
+              |+++++++
+              |+++++++
+              |+++++++
+              |+++++++
+              |+++++++""".stripMargin()
 
     def trailConnectedData =
-            """+-       
-              |xxxxxxxxx
-              |3       #
+            """333333333
               |3       3
-              |333333333""".stripMargin()
+              |3       #
+              |xxxxxxxxx
+              |+-       """.stripMargin()
     
     def passingFloodSearchData = 
-            """+++++++
-              |+++++++
-              |+++++++
-              |+++++++
-              |+++++++
-              |xxxxxxx
-              |xxxxxxx
-              |xxxxxxx
-              |xxxxxxx
-              |xxxxxxx
-              |xxxxxxx
+            """xxxxxxx
               |   x  x
               |   x  x
               |   x  x
-              |xxxxxxx""".stripMargin()
+              |xxxxxxx
+              |xxxxxxx
+              |xxxxxxx
+              |xxxxxxx
+              |xxxxxxx
+              |xxxxxxx
+              |+++++++
+              |+++++++
+              |+++++++
+              |+++++++
+              |+++++++""".stripMargin()
     
     
     def "player should die when contacts wall"() {
         given: "a board where player is next to the wall"
         def board = getBoardWithDimsFromData(new Point2D(5, 12), playersEvenSpacesAwayData)
-        board.applyMoves(Maps.mutable.of(player1, Direction.South, player2, Direction.East))
+        board.applyMoves(Maps.mutable.of(player1, Direction.North, player2, Direction.East))
         
         expect: "the player to die when he hits the wall and that he killed himself"
         board.getDeathsFromMoves(
-                Maps.mutable.of(player1, Direction.South, player2, Direction.East)) ==
+                Maps.mutable.of(player1, Direction.North, player2, Direction.East)) ==
                 Maps.mutable.of(player2, player2)
     }
     
@@ -103,14 +105,14 @@ class SplixBoardTestSpock extends Specification {
     def "players should die when they head butt"() {
         given: "a board where the players are an even or odd number of spaces away"
         def evenBoard = getBoardWithDimsFromData(new Point2D(5, 12), playersEvenSpacesAwayData)
-        evenBoard.applyMoves(Maps.mutable.of(player1, Direction.East, player2, Direction.North))
+        evenBoard.applyMoves(Maps.mutable.of(player1, Direction.East, player2, Direction.South))
         
         def oddBoard = getBoardWithDimsFromData(new Point2D(5, 12), playersOddSpacesAwayData)
-        oddBoard.applyMoves(Maps.mutable.of(player1, Direction.South, player2, Direction.North))
+        oddBoard.applyMoves(Maps.mutable.of(player1, Direction.North, player2, Direction.South))
         
         expect: "that both player should die both times"
         (evenBoard.getDeathsFromMoves(
-                Maps.mutable.of(player1, Direction.South, player2, Direction.North)) == 
+                Maps.mutable.of(player1, Direction.North, player2, Direction.South)) == 
                 Maps.mutable.of(player2, player1, player1, player2))
         (oddBoard.getDeathsFromMoves(
                 Maps.mutable.of(player1, Direction.East, player2, Direction.West)) == 
@@ -120,19 +122,19 @@ class SplixBoardTestSpock extends Specification {
     def "players should die when their line is crossed"() {
         given: "a board where a player can cross another person's line"
         def farAwayLineCross = getBoardWithDimsFromData(new Point2D(5, 12), playersOddSpacesAwayData)
-        farAwayLineCross.applyMoves(Maps.mutable.of(player1, Direction.South, player2, Direction.North))
-        farAwayLineCross.applyMoves(Maps.mutable.of(player1, Direction.South, player2, Direction.West))
+        farAwayLineCross.applyMoves(Maps.mutable.of(player1, Direction.North, player2, Direction.South))
+        farAwayLineCross.applyMoves(Maps.mutable.of(player1, Direction.North, player2, Direction.West))
 
         // death by line cross just behind other's head
         def closeLineCross = getBoardWithDimsFromData(new Point2D(5, 12), playersEvenSpacesAwayData)
-        closeLineCross.applyMoves(Maps.mutable.of(player1, Direction.South, player2, Direction.North))
+        closeLineCross.applyMoves(Maps.mutable.of(player1, Direction.North, player2, Direction.South))
         
         expect: "the player whos line was crossed to be killed by the other player"
         farAwayLineCross.getDeathsFromMoves(
-                Maps.mutable.of(player1, Direction.South, player2, Direction.West)) ==
+                Maps.mutable.of(player1, Direction.North, player2, Direction.West)) ==
                 Maps.mutable.of(player1, player2)
         closeLineCross.getDeathsFromMoves(
-                Maps.mutable.of(player1, Direction.South, player2, Direction.West)) ==
+                Maps.mutable.of(player1, Direction.North, player2, Direction.West)) ==
                 Maps.mutable.of(player1, player2)
     }
     
@@ -140,7 +142,7 @@ class SplixBoardTestSpock extends Specification {
         given: "a board where a player surrounds area"
         def board = getBoardWithDimsFromData(new Point2D(6, 14), passingFloodSearchData)
         board.fillPlayerCapturedArea(player1)
-        showBoard(board)
+        showBoard(board, player1, player2)
         
         expect: "the area to fill in"
         board.countPointsOwnedByPlayer(player1) == 61
@@ -182,7 +184,7 @@ class SplixBoardTestSpock extends Specification {
     def "checkPlayerTrailConnected should convert a trail to normal line if it is connected and run a fill"() {
         given: "a board where the player has connected"
         def board = getBoardWithDimsFromData(new Point2D(8, 4), trailConnectedData)
-        board.applyMoves(Maps.mutable.of(player1, Direction.North, player2, Direction.East))
+        board.applyMoves(Maps.mutable.of(player1, Direction.South, player2, Direction.East))
         // get around a behavior specific to loading data in from a string
         // the point where the player is is owned by him - regardless if this is correct
         // so this is fixed by changing that point.
@@ -192,6 +194,24 @@ class SplixBoardTestSpock extends Specification {
         
         expect: "the board to be filled in and the trail to be converted"
         board.countPointsOwnedByPlayer(player1) == 36
+    }
+    
+    def "try new game"() {
+        given:
+        def submission = new Submission<TrapBot>('TrapBot 1.0', {new TrapBot()})
+        def player = submission.create()
+        def game = new SplixGame(15)
+        game.addPlayers(Sets.mutable.of(player))
+        
+        game.setup()
+        for (def i = 0; i < 300; i++) {
+//            if (i%10 == 0)
+            showBoard(game.getBoard(), submission, player2)
+            game.step()
+            
+        }
+        expect: 
+        true
     }
     
     
@@ -218,7 +238,7 @@ class SplixBoardTestSpock extends Specification {
 
             for (int x = 0; x < line.length(); x++) {
                 char c = line.charAt(x)
-                Point2D pos = new Point2D(x, y)
+                Point2D pos = new Point2D(x, map.size()-1 - y)
 
                 if (c == '#') {
                     board.putPlayerInPosition(player1, pos)
@@ -233,7 +253,7 @@ class SplixBoardTestSpock extends Specification {
         
     } 
     
-    private def showBoard(SplixBoard board) {
+    private def showBoard(SplixBoard board, Submission<SplixPlayer> player1, Submission<SplixPlayer> player2) {
         def symbolMapping = [(new SplixPoint(player1, null)): 'x', 
                              (new SplixPoint(player2, null)): '+',
                              (new SplixPoint(null, null)): ' ',
@@ -247,7 +267,7 @@ class SplixBoardTestSpock extends Specification {
 
         def sb = new StringBuilder()
         sb.append("---\n")
-        for (int y = 0; y <= board.getBounds().getTop(); y++) {
+        for (int y = board.getBounds().getTop(); y >= 0 ; y--) {
             for (int x = 0; x <= board.getBounds().getRight(); x++) {
                 def point = new Point2D(x, y)
                 def playerPosSame = playerPositions.findAll({Submission<SplixPlayer> player, Point2D pos -> pos == point})

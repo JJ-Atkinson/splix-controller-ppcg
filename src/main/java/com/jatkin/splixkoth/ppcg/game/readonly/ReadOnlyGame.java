@@ -20,16 +20,5 @@ public class ReadOnlyGame {
     public int getRemainingIterations() {
         return backing.getRemainingIterations();
     }
-
-    /**
-     * Gets a view of the map that is fuzzed out like the global map in Splix.io
-     * @return
-     */
-    public Map<Point2D, Boolean> getFuzzyView() {
-        
-    }
-
-    public void destroy() {
-        backing = null;
-    }
+    
 }

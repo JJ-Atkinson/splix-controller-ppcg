@@ -16,22 +16,17 @@ public class ReadOnlySplixPoint {
         this.whosOnSpot = owner;
     }
 
-    public Submission<SplixPlayer> getTypeOfOwner() {
-        return backing.getTypeOfOwner();
+    public HiddenPlayer getTypeOfOwner() {
+        return new HiddenPlayer(backing.getTypeOfOwner());
     }
 
-    public Submission<SplixPlayer> getTypeOfClaimer() {
-        return backing.getTypeOfClaimer();
+    public HiddenPlayer getTypeOfClaimer() {
+        return new HiddenPlayer(backing.getTypeOfClaimer());
     }
 
     /**
      * Returns which, if any, player's dot is on the spot.  
      * @return
      */
-    public Submission<SplixPlayer> getWhosOnSpot() { return whosOnSpot; }
-
-    /**
-     * Nuke a splix point so they arn't reused.
-     */
-    public void destroy() { backing = null; }
+    public HiddenPlayer getWhosOnSpot() { return new HiddenPlayer(whosOnSpot); }
 }

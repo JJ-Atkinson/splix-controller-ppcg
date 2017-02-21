@@ -110,8 +110,8 @@ public class SplixBoard extends AdjacencyGraphMap<Point2D, SplixPoint> {
      */
     public MutableMap<Point2D, SplixPoint> getSubset(SquareBounds bounds) {
         MutableMap<Point2D, SplixPoint> ret = Maps.mutable.empty();
-        for (int x = bounds.getLeft(); x <= bounds.getRight(); x++) {
-            for (int y = bounds.getBottom(); y <= bounds.getTop(); y++) {
+        for (int x = Math.max(bounds.getLeft(), selfBounds.getLeft()); x <= bounds.getRight() && x <= selfBounds.getRight(); x++) {
+            for (int y = Math.max(bounds.getBottom(), selfBounds.getBottom()); y <= bounds.getTop() && y <= selfBounds.getTop(); y++) {
                 Point2D point = new Point2D(x, y);
                 ret.put(point, get(point));
             }

@@ -1,17 +1,18 @@
 package com.jatkin.splixkoth.ppcg.game.readonly;
 
+import com.jatkin.splixkoth.ppcg.SplixSettings;
 import com.jatkin.splixkoth.ppcg.game.SplixBoard;
 import com.jatkin.splixkoth.ppcg.game.SplixPlayer;
 import com.jatkin.splixkoth.ppcg.game.SplixPoint;
+import com.jatkin.splixkoth.ppcg.util.Utils;
 import com.nmerrill.kothcomm.game.maps.Point2D;
 import com.nmerrill.kothcomm.game.maps.graphmaps.bounds.point2D.SquareBounds;
 import com.nmerrill.kothcomm.game.players.Submission;
-import org.eclipse.collections.api.bag.MutableBag;
 import org.eclipse.collections.api.map.MutableMap;
-import org.eclipse.collections.api.tuple.Pair;
 import org.eclipse.collections.impl.factory.Maps;
 
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Created by Jarrett on 02/02/17.
@@ -24,7 +25,11 @@ public class ReadOnlyBoard {
         this.backing = backing;
         this.viewingArea = viewingArea;
     }
-    
+
+    /**
+     * A subset of getGlobal that shows where players are.
+     * @return
+     */
     public MutableMap<Point2D, ReadOnlySplixPoint> getView() {
         MutableMap<Submission<SplixPlayer>, Point2D> playerPositions = backing.getPlayerPositions();
         MutableMap<Point2D, ReadOnlySplixPoint> ret = Maps.mutable.empty();
@@ -41,6 +46,19 @@ public class ReadOnlyBoard {
 
         return ret;
     }
+
+    /**
+     * @return the whole board with the modification that players are not shown.
+     */
+    public MutableMap<Point2D, ReadOnlySplixPoint> getGlobal() {
+        MutableMap<Point2D, ReadOnlySplixPoint> ret = Maps.mutable.empty();
+        backing.locations().forEach(p -> ret.put(p, new ReadOnlySplixPoint(backing.get(p), null)));
+        return ret;
+    }
     
-    public void destroy() {}
+    public SquareBounds getBounds() {return backing.getBounds();}
+    
+    public Point2D getPosition(SplixPlayer me) {
+        return backing.getPlayerPositions().get(me.getType());
+    }
 }
