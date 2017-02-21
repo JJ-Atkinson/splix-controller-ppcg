@@ -73,6 +73,7 @@ public class TrapBot extends SplixPlayer {
                         board.getPosition(this), board.getBounds(), directionToWall);
                 if (distCanTravel == 0) mode = MODE_FOLLOWING_WALL;
                 else ret = directionToWall;
+                distToTravel = distCanTravel;
                 
             }
             
