@@ -76,7 +76,7 @@ public class UIController {
         
         globalViewCanvas.widthProperty().bind(globalViewCanvas.heightProperty());
         localViewCanvas.widthProperty().bind(localViewCanvas.heightProperty());
-
+        
     }
     
     @FXML
