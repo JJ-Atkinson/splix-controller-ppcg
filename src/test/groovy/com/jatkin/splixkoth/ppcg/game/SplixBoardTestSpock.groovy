@@ -196,27 +196,6 @@ class SplixBoardTestSpock extends Specification {
         board.countPointsOwnedByPlayer(player1) == 36
     }
     
-    def "try new game"() {
-        given:
-        def submission = new Submission<TrapBot>('TrapBot 1.0', {new TrapBot()})
-        def player = submission.create()
-        def game = new SplixGame(15)
-        game.addPlayers(Sets.mutable.of(player))
-        
-        game.setup()
-        for (def i = 0; i < 300; i++) {
-//            if (i%10 == 0)
-            showBoard(game.getBoard(), submission, player2)
-            game.step()
-            
-        }
-        expect: 
-        true
-    }
-    
-    
-    
-    
     /* ******************************************************************
     ****************************   Utils   ******************************
     ********************************************************************/

@@ -65,7 +65,6 @@ public class TrapBot extends SplixPlayer {
             if (lastTrailLength != 0) {
                 ret = lastMove.leftTurn();
                 // move to the other half of 2 width line so we can start without shifting to the left
-                
             }
             
             if (mode == MODE_GOING_TO_WALL && ret == null) {
