@@ -19,7 +19,7 @@ public class UIDebuggerRunner extends Application {
     @Override
     public void start(Stage primaryStage) throws Exception{
         primaryStage.setTitle("FXML TableView Example");
-        Pane myPane = (Pane) FXMLLoader.load(getClass().getResource
+        Pane myPane = FXMLLoader.load(getClass().getResource
                 ("UILayout.fxml"));
 
         Scene myScene = new Scene(myPane);

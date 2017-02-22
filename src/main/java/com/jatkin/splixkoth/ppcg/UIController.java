@@ -8,6 +8,7 @@ import com.jatkin.splixkoth.ppcg.game.SplixGame;
 import com.jatkin.splixkoth.ppcg.game.SplixPlayer;
 import com.jatkin.splixkoth.ppcg.game.SplixPoint;
 import com.jatkin.splixkoth.ppcg.players.TrapBot;
+import com.jatkin.splixkoth.ppcg.players.TrapBot2;
 import com.nmerrill.kothcomm.game.maps.Point2D;
 import com.nmerrill.kothcomm.game.maps.graphmaps.bounds.point2D.SquareBounds;
 import com.nmerrill.kothcomm.game.players.Submission;
@@ -27,12 +28,15 @@ import org.eclipse.collections.api.set.MutableSet;
 import org.eclipse.collections.impl.factory.Maps;
 import org.eclipse.collections.impl.factory.Sets;
 
+import java.util.Random;
+
 public class UIController {
     SplixGame game;
     
     MutableSet<Submission<SplixPlayer>> players = 
             Sets.mutable.of(
-                    new Submission<>("TrapBot 1.0", TrapBot::new)
+                    new Submission<>("TrapBot 1.0", TrapBot::new),
+                    new Submission<>("TrapBot 1.1", TrapBot2::new)
             );
     
     Color background = Color.web("#3a342f");
@@ -69,6 +73,7 @@ public class UIController {
         
         MutableSet<SplixPlayer> playerInstances = players.collect(Submission::create);
         game.addPlayers(playerInstances);
+        game.setRandom(new Random(-1085302355));
         game.setup();
         
         localViewGraphics = localViewCanvas.getGraphicsContext2D();
