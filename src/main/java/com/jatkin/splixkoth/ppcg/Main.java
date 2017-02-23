@@ -17,7 +17,7 @@ import java.util.Random;
  */
 public class Main {
     public static void main(String[] args) {
-        KotHComm runner = new KotHComm<>(() -> new SplixGame(80));
+        KotHComm<SplixPlayer, SplixGame > runner = new KotHComm<>(() -> new SplixGame(80));
         runner.addSubmission("TrapBot 1.0", TrapBot::new);
         runner.addSubmission("TrapBot 2.0", TrapBot2::new);
         runner.setGameSize(2);

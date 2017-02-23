@@ -26,7 +26,7 @@ public class SplixGame extends IteratedGame<SplixPlayer> {
     private final int scoreForKill = SplixSettings.pointsForKill;
     
     private SplixBoard board;
-    private Scoreboard<Submission<SplixPlayer>> scoreboard;
+    private Scoreboard<SplixPlayer> scoreboard;
     private final MutableSet<Submission<SplixPlayer>> deadPlayers = Sets.mutable.empty();
     
     public SplixGame(int size) {
@@ -71,7 +71,7 @@ public class SplixGame extends IteratedGame<SplixPlayer> {
         MutableMap<Submission<SplixPlayer>, Submission<SplixPlayer>> deaths = board.getDeathsFromMoves(playerMoves);
         board.killPlayers(deaths.keySet());
         deadPlayers.addAll(deaths.keySet());
-        deaths.forEach((p, killer) -> scoreboard.addScore(killer, scoreForKill));
+        deaths.forEach((p, killer) -> scoreboard.addScore(getPlayerForType(killer), scoreForKill));
         
         board.applyMoves(playerMoves);
         board.checkPlayerTrailsConnected();
@@ -79,6 +79,10 @@ public class SplixGame extends IteratedGame<SplixPlayer> {
         // perform a fill for all players - it may have removed a player that was preventing filling for another player
         if (deaths.notEmpty())
             players.forEach(p -> board.fillPlayerCapturedArea(p.getType()));
+    }
+
+    private SplixPlayer getPlayerForType(Submission<SplixPlayer> type) {
+        return players.select(p -> p.getType().equals(type)).getOnly();
     }
 
     private ReadOnlyBoard getReadOnlyBoardForPosition(Point2D pos) {
@@ -99,7 +103,7 @@ public class SplixGame extends IteratedGame<SplixPlayer> {
      * @return
      */
     @Override
-    public Scoreboard getScores() {
+    public Scoreboard<SplixPlayer> getScores() {
         if (!finished())
             return null;
         if (hasComputedScores)
@@ -108,10 +112,10 @@ public class SplixGame extends IteratedGame<SplixPlayer> {
         MutableSet<Submission<SplixPlayer>> deadPlayers = 
                 players.collect(SplixPlayer::getType).toSet()
                         .difference(board.getPlayerPositions().keysView().toSet());
-        deadPlayers.forEach(p -> scoreboard.setScore(p, 0));
+        deadPlayers.forEach(p -> scoreboard.setScore(getPlayerForType(p), 0));
         
         players.select(p -> !deadPlayers.contains(p.getType()))
-               .forEach(p -> scoreboard.addScore(p.getType(), board.countPointsOwnedByPlayer(p.getType())));
+               .forEach(p -> scoreboard.addScore(p, board.countPointsOwnedByPlayer(p.getType())));
         hasComputedScores = true;
         return scoreboard;
     }
