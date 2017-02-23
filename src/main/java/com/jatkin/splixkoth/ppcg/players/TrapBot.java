@@ -128,7 +128,7 @@ public class TrapBot extends SplixPlayer {
      * @return
      */
     int getDistCanTravel(Point2D currPos, SquareBounds bounds, Direction direction) {
-        for (int i = 0; i < PREFERRED_LINE_DIST; i++) {
+        for (int i = 1; i <= PREFERRED_LINE_DIST; i++) {
             if (!bounds.inBounds(
                     Utils.addPoints(currPos,
                             Utils.multPoint(direction.vector, i))))
