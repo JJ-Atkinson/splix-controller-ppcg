@@ -7,14 +7,14 @@
 <?import java.lang.*?>
 <?import javafx.scene.layout.*?>
 
-<GridPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns:fx="http://javafx.com/fxml/1" xmlns="http://javafx.com/javafx/8.0.40" fx:controller="com.jatkin.splixkoth.ppcg.UIController">
+<GridPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/8.0.40" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.jatkin.splixkoth.ppcg.UIController">
   <columnConstraints>
     <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
     <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
   </columnConstraints>
   <rowConstraints>
-    <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-    <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+    <RowConstraints maxHeight="365.0" minHeight="10.0" prefHeight="253.0" vgrow="ALWAYS" />
+    <RowConstraints maxHeight="149.0" minHeight="10.0" prefHeight="147.0" vgrow="NEVER" />
   </rowConstraints>
    <children>
       <Canvas fx:id="localViewCanvas" height="200.0" width="200.0" />
@@ -40,7 +40,7 @@
                   <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
                </padding>
                <children>
-                  <HBox prefHeight="100.0" prefWidth="200.0" spacing="5.0">
+                  <HBox prefWidth="200.0" spacing="5.0">
                      <children>
                         <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Turns left:">
                            <font>
@@ -53,7 +53,16 @@
                            </font>
                         </Text>
                      </children>
+                     <VBox.margin>
+                        <Insets bottom="10.0" />
+                     </VBox.margin>
                   </HBox>
+                  <MenuButton mnemonicParsing="false" text="Player">
+                    <items>
+                      <MenuItem mnemonicParsing="false" text="Action 1" />
+                      <MenuItem mnemonicParsing="false" text="Action 2" />
+                    </items>
+                  </MenuButton>
                </children>
             </VBox>
          </children>
@@ -61,7 +70,7 @@
             <Insets />
          </opaqueInsets>
       </VBox>
-      <VBox prefHeight="200.0" prefWidth="100.0" GridPane.columnIndex="1" GridPane.rowIndex="1">
+      <VBox fx:id="gameStateContainer" prefHeight="200.0" prefWidth="100.0" GridPane.columnIndex="1" GridPane.rowIndex="1">
          <children>
             <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Game state">
                <VBox.margin>
@@ -71,23 +80,6 @@
                   <Font name="Roboto" size="18.0" />
                </font>
             </Text>
-            <VBox prefHeight="200.0" prefWidth="100.0" spacing="5.0">
-               <VBox.margin>
-                  <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
-               </VBox.margin>
-               <padding>
-                  <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
-               </padding>
-               <children>
-                  <MenuButton mnemonicParsing="false" text="Player">
-                    <items>
-                      <MenuItem mnemonicParsing="false" text="Action 1" />
-                      <MenuItem mnemonicParsing="false" text="Action 2" />
-                    </items>
-                  </MenuButton>
-                  <Button mnemonicParsing="false" onAction="#doGameStep" text="Step Game" />
-               </children>
-            </VBox>
          </children>
       </VBox>
    </children>
