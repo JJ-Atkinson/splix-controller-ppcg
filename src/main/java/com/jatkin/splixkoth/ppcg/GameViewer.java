@@ -58,7 +58,6 @@ public class GameViewer implements GameNode {
     private void doDraw() {
         if (g == null)
             g = canvas.getGraphicsContext2D();
-        System.out.println("hi again");
 
         double percentFillSquareForDeadPoint = 0.7;
         double percentFillSquareForLivePoint = 0.85;
