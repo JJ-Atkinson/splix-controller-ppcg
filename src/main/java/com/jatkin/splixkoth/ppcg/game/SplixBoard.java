@@ -2,8 +2,8 @@ package com.jatkin.splixkoth.ppcg.game;
 
 import com.jatkin.splixkoth.ppcg.util.Utils;
 import com.nmerrill.kothcomm.game.maps.Point2D;
-import com.nmerrill.kothcomm.game.maps.graphmaps.AdjacencyGraphMap;
-import com.nmerrill.kothcomm.game.maps.graphmaps.bounds.point2D.SquareBounds;
+import com.nmerrill.kothcomm.game.maps.graphmaps.NeighborhoodGraphMap;
+import com.nmerrill.kothcomm.game.maps.graphmaps.bounds.point2D.SquareRegion;
 import com.nmerrill.kothcomm.game.maps.graphmaps.neighborhoods.VonNeumannNeighborhood;
 import com.nmerrill.kothcomm.game.players.Submission;
 import org.eclipse.collections.api.list.MutableList;
@@ -33,13 +33,13 @@ import java.util.function.Predicate;
  *
  * Created by Jarrett on 02/01/17.
  */
-public class SplixBoard extends AdjacencyGraphMap<Point2D, SplixPoint> {
+public class SplixBoard extends NeighborhoodGraphMap<Point2D, SplixPoint> {
     private MutableMap<Submission<SplixPlayer>, Point2D> playerPositions = Maps.mutable.empty();
 
-    private final SquareBounds selfBounds;
+    private final SquareRegion selfBounds;
     private final MutableSet<Point2D> borderPoints;
 
-    public SplixBoard(SquareBounds bounds) {
+    public SplixBoard(SquareRegion bounds) {
         super(bounds, new VonNeumannNeighborhood());
         selfBounds = bounds;
 
@@ -108,7 +108,7 @@ public class SplixBoard extends AdjacencyGraphMap<Point2D, SplixPoint> {
      * @param bounds
      * @return
      */
-    public MutableMap<Point2D, SplixPoint> getSubset(SquareBounds bounds) {
+    public MutableMap<Point2D, SplixPoint> getSubset(SquareRegion bounds) {
         MutableMap<Point2D, SplixPoint> ret = Maps.mutable.empty();
         for (int x = Math.max(bounds.getLeft(), selfBounds.getLeft()); x <= bounds.getRight() && x <= selfBounds.getRight(); x++) {
             for (int y = Math.max(bounds.getBottom(), selfBounds.getBottom()); y <= bounds.getTop() && y <= selfBounds.getTop(); y++) {
@@ -297,7 +297,7 @@ public class SplixBoard extends AdjacencyGraphMap<Point2D, SplixPoint> {
         });
     }
 
-    public SquareBounds getBounds() {return selfBounds;}
+    public SquareRegion getBounds() {return selfBounds;}
 
     public boolean putSafe(Point2D point, SplixPoint item) {
         try {

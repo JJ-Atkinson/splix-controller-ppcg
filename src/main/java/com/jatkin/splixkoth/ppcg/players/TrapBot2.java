@@ -7,7 +7,7 @@ import com.jatkin.splixkoth.ppcg.game.readonly.ReadOnlyGame;
 import com.jatkin.splixkoth.ppcg.game.readonly.ReadOnlySplixPoint;
 import com.jatkin.splixkoth.ppcg.util.Utils;
 import com.nmerrill.kothcomm.game.maps.Point2D;
-import com.nmerrill.kothcomm.game.maps.graphmaps.bounds.point2D.SquareBounds;
+import com.nmerrill.kothcomm.game.maps.graphmaps.bounds.point2D.SquareRegion;
 import javafx.util.Pair;
 import org.eclipse.collections.api.map.MutableMap;
 import org.eclipse.collections.impl.factory.Lists;
@@ -127,7 +127,7 @@ public class TrapBot2 extends SplixPlayer {
      * Calculate how far we can travel in the direction before we hit the wall.
      * @return
      */
-    int getDistCanTravel(Point2D currPos, SquareBounds bounds, Direction direction) {
+    int getDistCanTravel(Point2D currPos, SquareRegion bounds, Direction direction) {
         for (int i = 1; i <= PREFERRED_LINE_DIST; i++) {
             if (!bounds.inBounds(
                     Utils.addPoints(currPos,

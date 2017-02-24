@@ -4,7 +4,7 @@ import com.jatkin.splixkoth.ppcg.game.SplixBoard;
 import com.jatkin.splixkoth.ppcg.game.SplixPlayer;
 import com.jatkin.splixkoth.ppcg.game.SplixPoint;
 import com.nmerrill.kothcomm.game.maps.Point2D;
-import com.nmerrill.kothcomm.game.maps.graphmaps.bounds.point2D.SquareBounds;
+import com.nmerrill.kothcomm.game.maps.graphmaps.bounds.point2D.SquareRegion;
 import com.nmerrill.kothcomm.game.players.Submission;
 import org.eclipse.collections.api.map.MutableMap;
 import org.eclipse.collections.impl.factory.Maps;

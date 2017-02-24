@@ -7,7 +7,7 @@ import com.jatkin.splixkoth.ppcg.util.Utils;
 import com.nmerrill.kothcomm.game.games.AbstractGame;
 import com.nmerrill.kothcomm.game.games.IteratedGame;
 import com.nmerrill.kothcomm.game.maps.Point2D;
-import com.nmerrill.kothcomm.game.maps.graphmaps.bounds.point2D.SquareBounds;
+import com.nmerrill.kothcomm.game.maps.graphmaps.bounds.point2D.SquareRegion;
 import com.nmerrill.kothcomm.game.players.Submission;
 import com.nmerrill.kothcomm.game.scoring.Scoreboard;
 import org.eclipse.collections.api.map.MutableMap;
@@ -42,7 +42,7 @@ public class SplixGame extends IteratedGame<SplixPlayer> {
     @Override
     public void setup() {
         super.setup();
-        board = new SplixBoard(new SquareBounds(size));
+        board = new SplixBoard(new SquareRegion(size));
         board.initPlayers(getPlayerPositions());
         scoreboard = new Scoreboard<>();
     }
@@ -86,7 +86,7 @@ public class SplixGame extends IteratedGame<SplixPlayer> {
     }
 
     private ReadOnlyBoard getReadOnlyBoardForPosition(Point2D pos) {
-        SquareBounds area = new SquareBounds(
+        SquareRegion area = new SquareRegion(
                 Utils.addPoints(pos, new Point2D(-SplixSettings.viewingAreaSize.getX()/2,
                         -SplixSettings.viewingAreaSize.getY()/2)),
                 Utils.addPoints(pos, new Point2D(SplixSettings.viewingAreaSize.getX()/2,

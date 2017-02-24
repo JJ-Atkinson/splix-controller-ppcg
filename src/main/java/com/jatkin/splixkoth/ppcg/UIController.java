@@ -75,7 +75,7 @@ public class UIController {
         
         globalGameViewerView = new GameViewer(globalViewCanvas, () -> game.getBoard(), SplixBoard::locations, playerColors);
         
-        GameRunnerPane gameRunnerControls = new GameRunnerPane(game);
+        GRP gameRunnerControls = new GRP(game);
         gameStateContainer.getChildren().add(gameRunnerControls);
         gameRunnerControls.addGameNode(globalGameViewerView);
         

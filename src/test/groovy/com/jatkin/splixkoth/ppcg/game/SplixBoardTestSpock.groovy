@@ -7,7 +7,7 @@ import com.jatkin.splixkoth.ppcg.game.SplixPlayer
 import com.jatkin.splixkoth.ppcg.game.SplixPoint
 import com.jatkin.splixkoth.ppcg.players.TrapBot
 import com.nmerrill.kothcomm.game.maps.Point2D
-import com.nmerrill.kothcomm.game.maps.graphmaps.bounds.point2D.SquareBounds
+import com.nmerrill.kothcomm.game.maps.graphmaps.bounds.point2D.SquareRegion
 import com.nmerrill.kothcomm.game.players.Submission
 import org.eclipse.collections.api.map.MutableMap
 import org.eclipse.collections.impl.factory.Maps
@@ -159,7 +159,7 @@ class SplixBoardTestSpock extends Specification {
     
     def "initPlayer should place a player at the given position and surround it with a 5x5 bit of land"() {
         given: 
-        def board = new SplixBoard(new SquareBounds(new Point2D(0,0), new Point2D(7,7)))
+        def board = new SplixBoard(new SquareRegion(new Point2D(0,0), new Point2D(7,7)))
         board.initPlayers(Maps.mutable.of(player1, new Point2D(3,3)))
         
         expect:
@@ -266,7 +266,7 @@ class SplixBoardTestSpock extends Specification {
     }
 
     private SplixBoard getBoardWithDimsFromData(Point2D dims, String whichData) {
-        def board = new SplixBoard(new SquareBounds(
+        def board = new SplixBoard(new SquareRegion(
                 new Point2D(0, 0), dims))
         initBoardFromString(whichData, board)
         return board

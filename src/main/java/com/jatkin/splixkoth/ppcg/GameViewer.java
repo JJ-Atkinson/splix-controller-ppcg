@@ -4,13 +4,15 @@ import com.jatkin.splixkoth.ppcg.game.SplixBoard;
 import com.jatkin.splixkoth.ppcg.game.SplixPlayer;
 import com.jatkin.splixkoth.ppcg.game.SplixPoint;
 import com.nmerrill.kothcomm.game.maps.Point2D;
-import com.nmerrill.kothcomm.game.maps.graphmaps.bounds.point2D.SquareBounds;
+import com.nmerrill.kothcomm.game.maps.graphmaps.bounds.point2D.SquareRegion;
 import com.nmerrill.kothcomm.game.players.Submission;
 import com.nmerrill.kothcomm.ui.gui.GameNode;
 import javafx.animation.Animation;
 import javafx.animation.AnimationTimer;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
+import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
@@ -34,7 +36,7 @@ public class GameViewer implements GameNode {
     MutableMap<Submission<SplixPlayer>, Color> playerColors;
     GraphicsContext g;
     
-    Timeline queuedDraw = new Timeline(new KeyFrame(Duration.seconds(2), ae -> doDraw()));
+    Timeline queuedDraw = new Timeline(new KeyFrame(Duration.seconds(0.1), ae -> doDraw()));
 
     Color background = Color.web("#3a342f");
     Color gray = Color.web("#4e463f");
@@ -49,9 +51,8 @@ public class GameViewer implements GameNode {
     
     @Override
     public void draw() {
-        System.out.println("received draw command; timer state " + queuedDraw.statusProperty().get());
-        if (queuedDraw.statusProperty().get() == Animation.Status.STOPPED)
-            queuedDraw.playFromStart();
+        if (queuedDraw.statusProperty().get() == Animation.Status.STOPPED) 
+            Platform.runLater(queuedDraw::playFromStart);
     }
     
     private void doDraw() {
@@ -67,7 +68,7 @@ public class GameViewer implements GameNode {
 
         SplixBoard board = this.board.get();
         MutableSet<Point2D> locations = getView.apply(board);
-        SquareBounds gameSize = board.getBounds();
+        SquareRegion gameSize = board.getBounds();
         int boardSize = gameSize.getTop();
 
         double pixlesPerSplixPoint = graphicsSize / (boardSize+1);

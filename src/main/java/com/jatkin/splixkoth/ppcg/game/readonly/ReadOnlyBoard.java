@@ -6,7 +6,7 @@ import com.jatkin.splixkoth.ppcg.game.SplixPlayer;
 import com.jatkin.splixkoth.ppcg.game.SplixPoint;
 import com.jatkin.splixkoth.ppcg.util.Utils;
 import com.nmerrill.kothcomm.game.maps.Point2D;
-import com.nmerrill.kothcomm.game.maps.graphmaps.bounds.point2D.SquareBounds;
+import com.nmerrill.kothcomm.game.maps.graphmaps.bounds.point2D.SquareRegion;
 import com.nmerrill.kothcomm.game.players.Submission;
 import org.eclipse.collections.api.map.MutableMap;
 import org.eclipse.collections.impl.factory.Maps;
@@ -19,9 +19,9 @@ import java.util.Set;
  */
 public class ReadOnlyBoard {
     private SplixBoard backing;
-    private SquareBounds viewingArea;
+    private SquareRegion viewingArea;
 
-    public ReadOnlyBoard(SplixBoard backing, SquareBounds viewingArea) {
+    public ReadOnlyBoard(SplixBoard backing, SquareRegion viewingArea) {
         this.backing = backing;
         this.viewingArea = viewingArea;
     }
@@ -56,7 +56,7 @@ public class ReadOnlyBoard {
         return ret;
     }
     
-    public SquareBounds getBounds() {return backing.getBounds();}
+    public SquareRegion getBounds() {return backing.getBounds();}
     
     public Point2D getPosition(SplixPlayer me) {
         return backing.getPlayerPositions().get(me.getType());
