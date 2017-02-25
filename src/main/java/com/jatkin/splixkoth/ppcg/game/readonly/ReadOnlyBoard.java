@@ -19,7 +19,7 @@ import java.util.Set;
  */
 public class ReadOnlyBoard {
     private SplixBoard backing;
-    private SquareRegion viewingArea;
+    public final SquareRegion viewingArea;
 
     public ReadOnlyBoard(SplixBoard backing, SquareRegion viewingArea) {
         this.backing = backing;

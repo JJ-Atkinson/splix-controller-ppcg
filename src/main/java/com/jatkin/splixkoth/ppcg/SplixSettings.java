@@ -9,5 +9,6 @@ public class SplixSettings {
     public static final int gameIterationsCount = 300;
     public static final int pointsForKill = 300;
     
-    public static final Point2D viewingAreaSize = new Point2D(36, 20);
+    // must be square for the ui to work correctly
+    public static final Point2D viewingAreaSize = new Point2D(20, 20);
 }

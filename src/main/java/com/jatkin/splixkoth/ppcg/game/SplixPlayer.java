@@ -13,4 +13,6 @@ public abstract class SplixPlayer extends AbstractPlayer<SplixPlayer> {
     protected abstract Direction makeMove(ReadOnlyGame game, ReadOnlyBoard board);
     
     protected HiddenPlayer getThisHidden() {return new HiddenPlayer(this.getType());}
+    
+    
 }

@@ -8,10 +8,15 @@ import com.jatkin.splixkoth.ppcg.game.SplixGame;
 import com.jatkin.splixkoth.ppcg.game.SplixPlayer;
 import com.jatkin.splixkoth.ppcg.players.TrapBot;
 import com.jatkin.splixkoth.ppcg.players.TrapBot2;
+import com.nmerrill.kothcomm.game.maps.Point2D;
 import com.nmerrill.kothcomm.game.players.Submission;
 import com.nmerrill.kothcomm.ui.gui.GameRunnerPane;
+import javafx.beans.binding.Bindings;
+import javafx.beans.binding.NumberBinding;
 import javafx.fxml.FXML;
 import javafx.scene.canvas.Canvas;
+import javafx.scene.control.ComboBox;
+import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Text;
@@ -35,16 +40,18 @@ public class UIController {
     
     MutableSet<Color> colors = Sets.mutable.of(
             Color.web("#a22929"),// red
-            Color.web("#531880"),// purple
-            Color.web("#27409c"),// blue
+            Color.web("#3750ac"),// blue
             Color.web("#2ACC38"),// green
             Color.web("#d2b732"),// yellow
-            Color.web("#d06c18")// yellow
+            Color.web("#d06c18"),// yellow
+            Color.web("#531880")// purple
     );
 
-    private GameViewer localView;
+    private GameViewer localGameViewerView;
 
     private GameViewer globalGameViewerView;
+    
+    private SplixPlayer playerFollowed;
 
 
 
@@ -60,10 +67,12 @@ public class UIController {
     @FXML
     private VBox gameStateContainer;
 
-
+    @FXML
+    private ComboBox<SplixPlayer> playerChoiceComboBox;
+    
     @FXML
     void initialize() {
-        game = new SplixGame(20);
+        game = new SplixGame(80);
         
         MutableMap<Submission<SplixPlayer>, Color> playerColors = Maps.mutable.empty();
         players.toList().zip(colors.toList()).forEach(p -> playerColors.put(p.getOne(), p.getTwo()));
@@ -73,13 +82,35 @@ public class UIController {
         game.setRandom(new Random(-1085302355));
         game.setup();
         
-        globalGameViewerView = new GameViewer(globalViewCanvas, () -> game.getBoard(), SplixBoard::locations, playerColors);
+        globalGameViewerView = new GameViewer(globalViewCanvas, () -> game.getBoard(), SplixBoard::getBounds, playerColors);
+        localGameViewerView = new GameViewer(localViewCanvas, () -> game.getBoard(), (board -> {
+            Point2D playerPos = board.getPlayerPositions().get(playerFollowed.getType());
+            return game.getReadOnlyBoardForPosition(playerPos).viewingArea;
+        }), playerColors);
+        
         
         GameRunnerPane gameRunnerControls = new GameRunnerPane(game);
         gameStateContainer.getChildren().add(gameRunnerControls);
         gameRunnerControls.addGameNode(globalGameViewerView);
+        gameRunnerControls.addGameNode(localGameViewerView);
+
+        BorderPane gvcParent = (BorderPane) globalViewCanvas.getParent();
+        NumberBinding graphicsSize = Bindings.min(gvcParent.widthProperty(), gvcParent.heightProperty());
+        graphicsSize.addListener(observable -> {
+            globalGameViewerView.draw();
+            localGameViewerView.draw();
+        });
+
+        globalViewCanvas.widthProperty().bind(graphicsSize);
+        globalViewCanvas.heightProperty().bind(graphicsSize);
+        localViewCanvas.widthProperty().bind(graphicsSize);
+        localViewCanvas.heightProperty().bind(graphicsSize);
         
-        
+
+        playerChoiceComboBox.getItems().addAll(playerInstances);
+        playerChoiceComboBox.valueProperty().addListener((b, o, newValue) -> 
+                {playerFollowed = newValue; localGameViewerView.draw();});
+        playerChoiceComboBox.valueProperty().set(playerInstances.toList().get(1));
     }
 }
 

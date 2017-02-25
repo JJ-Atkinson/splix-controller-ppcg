@@ -57,6 +57,7 @@ public class SplixGame extends IteratedGame<SplixPlayer> {
     }
 
     public SplixBoard getBoard() {return board;}
+    
     @Override
     public void step() {
         super.step();
@@ -85,13 +86,20 @@ public class SplixGame extends IteratedGame<SplixPlayer> {
         return players.select(p -> p.getType().equals(type)).getOnly();
     }
 
-    private ReadOnlyBoard getReadOnlyBoardForPosition(Point2D pos) {
+    public ReadOnlyBoard getReadOnlyBoardForPosition(Point2D pos) {
         SquareRegion area = new SquareRegion(
                 Utils.addPoints(pos, new Point2D(-SplixSettings.viewingAreaSize.getX()/2,
                         -SplixSettings.viewingAreaSize.getY()/2)),
                 Utils.addPoints(pos, new Point2D(SplixSettings.viewingAreaSize.getX()/2,
                         SplixSettings.viewingAreaSize.getY()/2))
         );
+//        SquareRegion bounds = board.getBounds();
+//
+//        area = new SquareRegion(
+//                new Point2D(Math.max(area.getLeft(), bounds.getLeft()),
+//                            Math.max(area.getBottom(), bounds.getBottom())),
+//                new Point2D(Math.min(area.getRight(), bounds.getRight()),
+//                            Math.min(area.getTop(), bounds.getTop())));
         
         return new ReadOnlyBoard(this.board, area);
     }

@@ -13,12 +13,10 @@
     <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
   </columnConstraints>
   <rowConstraints>
-    <RowConstraints maxHeight="365.0" minHeight="10.0" prefHeight="253.0" vgrow="ALWAYS" />
+    <RowConstraints maxHeight="1.7976931348623157E308" minHeight="10.0" prefHeight="200.0" vgrow="ALWAYS" />
     <RowConstraints maxHeight="149.0" minHeight="10.0" prefHeight="147.0" vgrow="NEVER" />
   </rowConstraints>
    <children>
-      <Canvas fx:id="localViewCanvas" height="200.0" width="200.0" />
-      <Canvas fx:id="globalViewCanvas" height="200.0" width="200.0" GridPane.columnIndex="1" />
       <VBox prefHeight="200.0" prefWidth="100.0" GridPane.rowIndex="1">
          <children>
             <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Information">
@@ -57,12 +55,7 @@
                         <Insets bottom="10.0" />
                      </VBox.margin>
                   </HBox>
-                  <MenuButton mnemonicParsing="false" text="Player">
-                    <items>
-                      <MenuItem mnemonicParsing="false" text="Action 1" />
-                      <MenuItem mnemonicParsing="false" text="Action 2" />
-                    </items>
-                  </MenuButton>
+                  <ComboBox fx:id="playerChoiceComboBox" prefWidth="150.0" />
                </children>
             </VBox>
          </children>
@@ -82,5 +75,15 @@
             </Text>
          </children>
       </VBox>
+      <BorderPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="200.0" prefWidth="200.0" GridPane.hgrow="SOMETIMES" GridPane.vgrow="SOMETIMES">
+         <center>
+            <Canvas fx:id="localViewCanvas" height="200.0" width="200.0" BorderPane.alignment="CENTER" />
+         </center>
+      </BorderPane>
+      <BorderPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="200.0" prefWidth="200.0" GridPane.columnIndex="1" GridPane.hgrow="SOMETIMES" GridPane.vgrow="SOMETIMES">
+         <center>
+            <Canvas fx:id="globalViewCanvas" height="200.0" width="200.0" BorderPane.alignment="CENTER" />
+         </center>
+      </BorderPane>
    </children>
 </GridPane>
