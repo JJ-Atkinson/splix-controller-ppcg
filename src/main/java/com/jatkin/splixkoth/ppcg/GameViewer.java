@@ -37,7 +37,7 @@ public class GameViewer implements GameNode {
     MutableMap<Submission<SplixPlayer>, Color> playerColors;
     GraphicsContext g;
     
-    Timeline queuedDraw = new Timeline(new KeyFrame(Duration.seconds(0.1), ae -> doDraw()));
+    Timeline queuedDraw = new Timeline(new KeyFrame(Duration.millis(16), ae -> doDraw()));
 
     Color background = Color.web("#3a342f");
     Color gray = Color.web("#4e463f");

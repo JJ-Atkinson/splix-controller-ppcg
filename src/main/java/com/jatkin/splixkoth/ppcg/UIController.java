@@ -7,7 +7,6 @@ import com.jatkin.splixkoth.ppcg.game.SplixBoard;
 import com.jatkin.splixkoth.ppcg.game.SplixGame;
 import com.jatkin.splixkoth.ppcg.game.SplixPlayer;
 import com.jatkin.splixkoth.ppcg.players.TrapBot;
-import com.jatkin.splixkoth.ppcg.players.TrapBot2;
 import com.nmerrill.kothcomm.game.maps.Point2D;
 import com.nmerrill.kothcomm.game.players.Submission;
 import com.nmerrill.kothcomm.ui.gui.GameRunnerPane;
@@ -33,27 +32,23 @@ public class UIController {
     MutableSet<Submission<SplixPlayer>> players = 
             Sets.mutable.of(
                     new Submission<>("TrapBot 1.0", TrapBot::new),
-                    new Submission<>("TrapBot 1.1", TrapBot2::new)
+                    new Submission<>("TrapBot 1.1", TrapBot::new)
             );
     
 
     
     MutableSet<Color> colors = Sets.mutable.of(
             Color.web("#a22929"),// red
-            Color.web("#3750ac"),// blue
+            Color.web("#4760bc"),// blue
             Color.web("#2ACC38"),// green
             Color.web("#d2b732"),// yellow
             Color.web("#d06c18"),// yellow
             Color.web("#531880")// purple
     );
-
-    private GameViewer localGameViewerView;
-
-    private GameViewer globalGameViewerView;
     
-    private SplixPlayer playerFollowed;
-
-
+    private GameViewer localGameViewerView;
+    private GameViewer globalGameViewerView;
+    private Submission<SplixPlayer> playerFollowed;
 
     @FXML
     private Canvas localViewCanvas;
@@ -68,31 +63,34 @@ public class UIController {
     private VBox gameStateContainer;
 
     @FXML
-    private ComboBox<SplixPlayer> playerChoiceComboBox;
+    private ComboBox<Submission<SplixPlayer>> playerChoiceComboBox;
     
-    @FXML
-    void initialize() {
-        game = new SplixGame(80);
+    public void setGame(SplixGame game) {
+        this.game = game;
+        
+        setup();
+    }
+    
+    void setup() {
+        MutableSet<Submission<SplixPlayer>> players = game.getBoard().getPlayerPositions().keysView().toSet();
+        
         
         MutableMap<Submission<SplixPlayer>, Color> playerColors = Maps.mutable.empty();
-        players.toList().zip(colors.toList()).forEach(p -> playerColors.put(p.getOne(), p.getTwo()));
-        
-        MutableSet<SplixPlayer> playerInstances = players.collect(Submission::create);
-        game.addPlayers(playerInstances);
-        game.setRandom(new Random(-1085302355));
-        game.setup();
-        
+        players.toList().zip(colors.toList()).forEach(p -> playerColors.put(p.getOne(), p.getTwo())); 
+
+
         globalGameViewerView = new GameViewer(globalViewCanvas, () -> game.getBoard(), SplixBoard::getBounds, playerColors);
         localGameViewerView = new GameViewer(localViewCanvas, () -> game.getBoard(), (board -> {
-            Point2D playerPos = board.getPlayerPositions().get(playerFollowed.getType());
+            Point2D playerPos = board.getPlayerPositions().get(playerFollowed);
             return game.getReadOnlyBoardForPosition(playerPos).viewingArea;
         }), playerColors);
-        
-        
+
+
         GameRunnerPane gameRunnerControls = new GameRunnerPane(game);
         gameStateContainer.getChildren().add(gameRunnerControls);
         gameRunnerControls.addGameNode(globalGameViewerView);
         gameRunnerControls.addGameNode(localGameViewerView);
+
 
         BorderPane gvcParent = (BorderPane) globalViewCanvas.getParent();
         NumberBinding graphicsSize = Bindings.min(gvcParent.widthProperty(), gvcParent.heightProperty());
@@ -105,12 +103,13 @@ public class UIController {
         globalViewCanvas.heightProperty().bind(graphicsSize);
         localViewCanvas.widthProperty().bind(graphicsSize);
         localViewCanvas.heightProperty().bind(graphicsSize);
-        
 
-        playerChoiceComboBox.getItems().addAll(playerInstances);
-        playerChoiceComboBox.valueProperty().addListener((b, o, newValue) -> 
-                {playerFollowed = newValue; localGameViewerView.draw();});
-        playerChoiceComboBox.valueProperty().set(playerInstances.toList().get(1));
+
+        playerChoiceComboBox.getItems().addAll(players);
+        playerChoiceComboBox.valueProperty().addListener((b, o, newValue) ->
+        {playerFollowed = newValue; localGameViewerView.draw();});
+        playerChoiceComboBox.valueProperty().set(players.toList().get(1));
     }
+
 }
 
