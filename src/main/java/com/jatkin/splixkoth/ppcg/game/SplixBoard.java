@@ -14,9 +14,9 @@ import org.eclipse.collections.impl.factory.Maps;
 import org.eclipse.collections.impl.factory.Sets;
 import org.eclipse.collections.impl.factory.Stacks;
 
-import java.util.Collection;
+import java.util.ArrayDeque;
+import java.util.HashSet;
 import java.util.Map;
-import java.util.Random;
 import java.util.Set;
 import java.util.function.Predicate;
 
@@ -146,10 +146,10 @@ public class SplixBoard extends NeighborhoodGraphMap<Point2D, SplixPoint> {
         for (Submission<SplixPlayer> player : playerPositions.keySet()) {
             Point2D pos = playerPositions.get(player);
             if (get(pos).getTypeOfOwner() == player) {// player has entered his own territory
-                MutableSet<Point2D> trail = floodSearch(pos, p -> get(p).getTypeOfClaimer() == player);
+                Set<Point2D> trail = floodSearch(pos, p -> get(p).getTypeOfClaimer() == player);
                 trail.forEach(t -> get(t).setTypeOfClaimer(null));
                 trail.forEach(t -> get(t).setTypeOfOwner(player));
-                if (trail.notEmpty())
+                if (!trail.isEmpty())
                     fillPlayerCapturedArea(player);
             }
         }
@@ -165,24 +165,26 @@ public class SplixBoard extends NeighborhoodGraphMap<Point2D, SplixPoint> {
         MutableSet<Point2D> allPoints = locations();
         MutableSet<Point2D> alreadyOwnedSpace = allPoints.select(x -> get(x).getTypeOfOwner() == whoToCheck);
         MutableSet<Point2D> checkSpace = allPoints.difference(alreadyOwnedSpace);
-        MutableSet<MutableSet<Point2D>> spacesToExamine = Sets.mutable.empty();
+        MutableSet<Set<Point2D>> spacesToExamine = Sets.mutable.empty();
         MutableSet<Point2D> otherPlayerPositionsSet = Sets.mutable.ofAll(playerPositions.values());
         otherPlayerPositionsSet.remove(playerPositions.get(whoToCheck));
 
         while (checkSpace.notEmpty()) {
             Point2D start = checkSpace.iterator().next();
-            MutableSet<Point2D> connectedPoints = floodSearch(start, point -> get(point).getTypeOfOwner() != whoToCheck);
+            Set<Point2D> connectedPoints = floodSearch(start, point -> get(point).getTypeOfOwner() != whoToCheck);
             spacesToExamine.add(connectedPoints);
             checkSpace.removeAll(connectedPoints);
         }
+//        new HashSet().re
 
-
-        for (MutableSet<Point2D> space : spacesToExamine) {
+        for (Set<Point2D> space : spacesToExamine) {
             // no points intersect boarder - no area that can be filled can intersect the boarder
-            if (space.intersect(borderPoints).size() == 0) {
+            boolean anyIntersectBoarder = space.removeAll(borderPoints);
+            if (!anyIntersectBoarder) {
                 // if the space intersects any other players, we can't fill in
                 // set contains true if we can't fill in
-                boolean canFillIn = space.intersect(otherPlayerPositionsSet).size() == 0;
+                boolean canFillIn = !space.removeAll(otherPlayerPositionsSet);
+//                boolean canFillIn = space.intersect(otherPlayerPositionsSet).size() == 0;
 
                 if (canFillIn) {
                     space.forEach(p -> get(p).setTypeOfOwner(whoToCheck));
@@ -195,14 +197,22 @@ public class SplixBoard extends NeighborhoodGraphMap<Point2D, SplixPoint> {
         return locations().count(p -> get(p).getTypeOfOwner() == player);
     }
 
-    public MutableSet<Point2D> floodSearch(Point2D start, Predicate<Point2D> isAccepted) {
-        MutableSet<Point2D> ret = Sets.mutable.empty();
-        MutableStack<Point2D> nodesToExamine = Stacks.mutable.of(start);
-        while (nodesToExamine.notEmpty()) {
+    public Set<Point2D> floodSearch(Point2D start, Predicate<Point2D> isAccepted) {
+        Set<Point2D> ret = new HashSet<>();
+        ArrayDeque<Point2D> nodesToExamine = new ArrayDeque<>();
+        nodesToExamine.add(start);
+        while (!nodesToExamine.isEmpty()) {
             Point2D node = nodesToExamine.pop();
             ret.add(node);
-            MutableSet<Point2D> validNeighbors = getNeighbors(node).select(n -> !ret.contains(n) && inBounds(n));
-            validNeighbors.select(isAccepted::test).forEach(nodesToExamine::push);
+            Point2D p1 = new Point2D(node.getX()-1, node.getY());
+            Point2D p2 = new Point2D(node.getX()+1, node.getY());
+            Point2D p3 = new Point2D(node.getX(), node.getY()+1);
+            Point2D p4 = new Point2D(node.getX(), node.getY()-1);
+
+            if (!ret.contains(p1) && inBounds(p1) && isAccepted.test(p1)) nodesToExamine.push(p1);
+            if (!ret.contains(p2) && inBounds(p2) && isAccepted.test(p2)) nodesToExamine.push(p2);
+            if (!ret.contains(p3) && inBounds(p3) && isAccepted.test(p3)) nodesToExamine.push(p3);
+            if (!ret.contains(p4) && inBounds(p4) && isAccepted.test(p4)) nodesToExamine.push(p4);
         }
         return ret;
     }
