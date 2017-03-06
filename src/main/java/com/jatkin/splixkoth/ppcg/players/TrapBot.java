@@ -118,8 +118,8 @@ public class TrapBot extends SplixPlayer {
      * @return
      */
     int getTrailLength(ReadOnlyBoard board, MutableMap<Point2D, ReadOnlySplixPoint> view) {
-        boolean isPlayerOutsideHome = !view.get(board.getPosition(this)).getTypeOfOwner().equals(getThisHidden());
-        int trailLength = view.count(rop -> rop.getTypeOfClaimer().equals(getThisHidden()));
+        boolean isPlayerOutsideHome = !view.get(board.getPosition(this)).getOwner().equals(getThisHidden());
+        int trailLength = view.count(rop -> rop.getClaimer().equals(getThisHidden()));
         return trailLength + (isPlayerOutsideHome? 1 : 0);
     }
 
@@ -146,5 +146,13 @@ public class TrapBot extends SplixPlayer {
     Direction getDirectionToWall(int targetWall) {
         return Direction.values()[targetWall-1];
     }
-    
+
+    @Override
+    public boolean equals(Object o) {
+        return this == o;
+    }
+
+    private int hc = (int)(Math.random()*Integer.MAX_VALUE);
+    @Override
+    public int hashCode() {return hc;}
 }

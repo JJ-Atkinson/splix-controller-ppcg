@@ -9,19 +9,19 @@ import com.nmerrill.kothcomm.game.players.Submission;
  */
 public class ReadOnlySplixPoint {
     private SplixPoint backing;
-    private Submission<SplixPlayer> whosOnSpot;
+    private SplixPlayer whosOnSpot;
 
-    public ReadOnlySplixPoint(SplixPoint backing, Submission<SplixPlayer> owner) {
+    public ReadOnlySplixPoint(SplixPoint backing, SplixPlayer owner) {
         this.backing = backing;
         this.whosOnSpot = owner;
     }
 
-    public HiddenPlayer getTypeOfOwner() {
-        return new HiddenPlayer(backing.getTypeOfOwner());
+    public HiddenPlayer getOwner() {
+        return new HiddenPlayer(backing.getOwner());
     }
 
-    public HiddenPlayer getTypeOfClaimer() {
-        return new HiddenPlayer(backing.getTypeOfClaimer());
+    public HiddenPlayer getClaimer() {
+        return new HiddenPlayer(backing.getClaimer());
     }
 
     /**

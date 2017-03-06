@@ -11,7 +11,7 @@ import org.eclipse.collections.impl.factory.Lists;
  * Created by Jarrett on 02/14/17.
  */
 public class SplixSettings {
-    public static final int gameIterationsCount = 300;
+    public static final int gameIterationsCount = 2000;
     public static final int pointsForKill = 300;
     
     // must be square for the ui to work correctly

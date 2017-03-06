@@ -11,12 +11,14 @@ import com.nmerrill.kothcomm.game.maps.Point2D;
 import com.nmerrill.kothcomm.game.players.Submission;
 import com.nmerrill.kothcomm.ui.gui.GameRunnerPane;
 import javafx.beans.binding.Bindings;
+import javafx.beans.binding.IntegerBinding;
 import javafx.beans.binding.NumberBinding;
+import javafx.beans.binding.ObjectBinding;
+import javafx.beans.property.SimpleIntegerProperty;
 import javafx.fxml.FXML;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.control.ComboBox;
-import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Text;
 import org.eclipse.collections.api.map.MutableMap;
@@ -48,14 +50,17 @@ public class UIController {
     
     private GameViewer localGameViewerView;
     private GameViewer globalGameViewerView;
-    private Submission<SplixPlayer> playerFollowed;
+    private SplixPlayer playerFollowed;
 
     @FXML
     private Canvas localViewCanvas;
-
+    
     @FXML
     private Canvas globalViewCanvas;
 
+    @FXML
+    private GridPane root;
+    
     @FXML
     private Text turnsLeft;
 
@@ -63,7 +68,7 @@ public class UIController {
     private VBox gameStateContainer;
 
     @FXML
-    private ComboBox<Submission<SplixPlayer>> playerChoiceComboBox;
+    private ComboBox<SplixPlayer> playerChoiceComboBox;
     
     public void setGame(SplixGame game) {
         this.game = game;
@@ -72,10 +77,10 @@ public class UIController {
     }
     
     void setup() {
-        MutableSet<Submission<SplixPlayer>> players = game.getBoard().getPlayerPositions().keysView().toSet();
+        MutableSet<SplixPlayer> players = game.getBoard().getPlayerPositions().keysView().toSet();
         
         
-        MutableMap<Submission<SplixPlayer>, Color> playerColors = Maps.mutable.empty();
+        MutableMap<SplixPlayer, Color> playerColors = Maps.mutable.empty();
         players.toList().zip(colors.toList()).forEach(p -> playerColors.put(p.getOne(), p.getTwo())); 
 
 
@@ -92,8 +97,8 @@ public class UIController {
         gameRunnerControls.addGameNode(localGameViewerView);
 
 
-        BorderPane gvcParent = (BorderPane) globalViewCanvas.getParent();
-        NumberBinding graphicsSize = Bindings.min(gvcParent.widthProperty(), gvcParent.heightProperty());
+        BorderPane lvcParent = (BorderPane) localViewCanvas.getParent();
+        NumberBinding graphicsSize = Bindings.min(lvcParent.widthProperty(), lvcParent.heightProperty());
         graphicsSize.addListener(observable -> {
             globalGameViewerView.draw();
             localGameViewerView.draw();
@@ -103,12 +108,21 @@ public class UIController {
         globalViewCanvas.heightProperty().bind(graphicsSize);
         localViewCanvas.widthProperty().bind(graphicsSize);
         localViewCanvas.heightProperty().bind(graphicsSize);
+        
+        root.parentProperty().addListener(obs -> {
+            root.prefWidthProperty().bind(((Pane)root.getParent()).widthProperty());
+            root.prefHeightProperty().bind(((Pane)root.getParent()).heightProperty());
+        });
 
 
         playerChoiceComboBox.getItems().addAll(players);
         playerChoiceComboBox.valueProperty().addListener((b, o, newValue) ->
-        {playerFollowed = newValue; localGameViewerView.draw();});
+            {playerFollowed = newValue; localGameViewerView.draw();});
         playerChoiceComboBox.valueProperty().set(players.toList().get(1));
+
+        SimpleIntegerProperty turnsLeftIntProp = new SimpleIntegerProperty(game.getRemainingIterations());
+        turnsLeft.textProperty().bind(Bindings.convert(turnsLeftIntProp));
+        gameRunnerControls.addGameNode(() -> turnsLeftIntProp.set(game.getRemainingIterations()));
     }
 
 }

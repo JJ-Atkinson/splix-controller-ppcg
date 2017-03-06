@@ -31,16 +31,16 @@ public class ReadOnlyBoard {
      * @return
      */
     public MutableMap<Point2D, ReadOnlySplixPoint> getView() {
-        MutableMap<Submission<SplixPlayer>, Point2D> playerPositions = backing.getPlayerPositions();
+        MutableMap<SplixPlayer, Point2D> playerPositions = backing.getPlayerPositions();
         MutableMap<Point2D, ReadOnlySplixPoint> ret = Maps.mutable.empty();
 
         MutableMap<Point2D, SplixPoint> subset = backing.getSubset(viewingArea);
         for (Map.Entry<Point2D, SplixPoint> ent : subset.entrySet()) {
             Point2D pos = ent.getKey();
             SplixPoint point = ent.getValue();
-            MutableMap<Submission<SplixPlayer>, Point2D> playersWithPos =
+            MutableMap<SplixPlayer, Point2D> playersWithPos =
                   playerPositions.select((player, p) -> p.equals(pos));
-            Submission<SplixPlayer> player = playersWithPos.size() == 1 ? playersWithPos.keysView().getOnly() : null;
+            SplixPlayer player = playersWithPos.size() == 1 ? playersWithPos.keysView().getOnly() : null;
             ret.put(pos, new ReadOnlySplixPoint(point, player));
         }
 
@@ -59,6 +59,6 @@ public class ReadOnlyBoard {
     public SquareRegion getBounds() {return backing.getBounds();}
     
     public Point2D getPosition(SplixPlayer me) {
-        return backing.getPlayerPositions().get(me.getType());
+        return backing.getPlayerPositions().get(me);
     }
 }

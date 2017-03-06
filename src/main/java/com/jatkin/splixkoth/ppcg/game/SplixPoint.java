@@ -1,9 +1,5 @@
 package com.jatkin.splixkoth.ppcg.game;
 
-import com.nmerrill.kothcomm.game.maps.MapPoint;
-import com.nmerrill.kothcomm.game.maps.Point2D;
-import com.nmerrill.kothcomm.game.players.Submission;
-
 /**
  * Created by Jarrett on 02/02/17.
  */
@@ -11,28 +7,28 @@ public class SplixPoint {
     /**
      * Who owns the point. May be null if nobody owns it.
      */
-    private Submission<SplixPlayer> typeOfOwner;
+    private SplixPlayer typeOfOwner;
 
-    private Submission<SplixPlayer> typeOfClaimer;
+    private SplixPlayer typeOfClaimer;
 
-    public SplixPoint(Submission<SplixPlayer> typeOfOwner, Submission<SplixPlayer> typeOfClaimer) {
+    public SplixPoint(SplixPlayer typeOfOwner, SplixPlayer typeOfClaimer) {
         this.typeOfOwner = typeOfOwner;
         this.typeOfClaimer = typeOfClaimer;
     }
 
     public SplixPoint() {this (null, null);}
 
-    public Submission<SplixPlayer> getTypeOfOwner() {
+    public SplixPlayer getOwner() {
         return typeOfOwner;
     }
 
-    public void setTypeOfOwner(Submission<SplixPlayer> typeOfOwner) {
+    public void setOwner(SplixPlayer typeOfOwner) {
         this.typeOfOwner = typeOfOwner;
     }
 
-    public Submission<SplixPlayer> getTypeOfClaimer() { return typeOfClaimer; }
+    public SplixPlayer getClaimer() { return typeOfClaimer; }
 
-    public void setTypeOfClaimer(Submission<SplixPlayer> typeOfClaimer) { this.typeOfClaimer = typeOfClaimer; }
+    public void setTypeOfClaimer(SplixPlayer typeOfClaimer) { this.typeOfClaimer = typeOfClaimer; }
 
     @Override
     public boolean equals(Object o) {
@@ -54,6 +50,6 @@ public class SplixPoint {
 
     @Override
     public String toString() {
-        return "SPoint: O=" + typeOfOwner + "; C=" + getTypeOfClaimer();
+        return "SPoint: O=" + typeOfOwner + "; C=" + getClaimer();
     }
 }

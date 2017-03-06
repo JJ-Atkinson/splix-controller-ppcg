@@ -1,10 +1,5 @@
 package com.jatkin.splixkoth.ppcg.game
 
-import com.jatkin.splixkoth.ppcg.game.Direction
-import com.jatkin.splixkoth.ppcg.game.SplixBoard
-import com.jatkin.splixkoth.ppcg.game.SplixGame
-import com.jatkin.splixkoth.ppcg.game.SplixPlayer
-import com.jatkin.splixkoth.ppcg.game.SplixPoint
 import com.jatkin.splixkoth.ppcg.players.TrapBot
 import com.nmerrill.kothcomm.game.maps.Point2D
 import com.nmerrill.kothcomm.game.maps.graphmaps.bounds.point2D.SquareRegion
@@ -16,8 +11,8 @@ import spock.lang.*
 
 class SplixBoardTestSpock extends Specification {
     
-    @Shared def player1 = new Submission("Null Player 1", null)
-    @Shared def player2 = new Submission("Null Player 2", null)
+    @Shared def player1 = new TrapBot()// does nothing, just used for reference
+    @Shared def player2 = new TrapBot()
     def playersEvenSpacesAwayData = 
              """++++++
                |++++++
@@ -172,7 +167,7 @@ class SplixBoardTestSpock extends Specification {
         def board = getBoardWithDimsFromData(new Point2D(6, 14), failingFloodSearchData)
         board.killPlayers(Sets.mutable.of(player1))
         def areaOwned = board.countPointsOwnedByPlayer(player1)
-        def areaClaimed = board.locations().collect({l -> board.get(l)}).count {p -> p.getTypeOfClaimer() == player1}
+        def areaClaimed = board.locations().collect({l -> board.get(l)}).count {p -> p.getClaimer() == player1}
         def noPlayerPosition = board.getPlayerPositions().keySet().contains(player1) == false
         
         expect: "no trace left of that player"
@@ -189,7 +184,7 @@ class SplixBoardTestSpock extends Specification {
         // the point where the player is is owned by him - regardless if this is correct
         // so this is fixed by changing that point.
         board.get(new Point2D(8, 2)).setTypeOfClaimer(player1)
-        board.get(new Point2D(8, 2)).setTypeOfOwner(null)
+        board.get(new Point2D(8, 2)).setOwner(null)
         board.checkPlayerTrailsConnected()
         
         expect: "the board to be filled in and the trail to be converted"
@@ -232,7 +227,7 @@ class SplixBoardTestSpock extends Specification {
         
     } 
     
-    private def showBoard(SplixBoard board, Submission<SplixPlayer> player1, Submission<SplixPlayer> player2) {
+    private def showBoard(SplixBoard board, SplixPlayer player1, SplixPlayer player2) {
         def symbolMapping = [(new SplixPoint(player1, null)): 'x', 
                              (new SplixPoint(player2, null)): '+',
                              (new SplixPoint(null, null)): ' ',
@@ -242,14 +237,14 @@ class SplixBoardTestSpock extends Specification {
                              (new SplixPoint(null, player2)): '4']
         // X is player 1's position
         // - is player 2's position
-        MutableMap<Submission<SplixPlayer>, Point2D> playerPositions = board.getPlayerPositions()
+        MutableMap<SplixPlayer, Point2D> playerPositions = board.getPlayerPositions()
 
         def sb = new StringBuilder()
         sb.append("---\n")
         for (int y = board.getBounds().getTop(); y >= 0 ; y--) {
             for (int x = 0; x <= board.getBounds().getRight(); x++) {
                 def point = new Point2D(x, y)
-                def playerPosSame = playerPositions.findAll({Submission<SplixPlayer> player, Point2D pos -> pos == point})
+                def playerPosSame = playerPositions.findAll({SplixPlayer player, Point2D pos -> pos == point})
                 if (!playerPosSame.isEmpty()) {
                     if (playerPosSame.keySet().contains(player1))
                         sb.append('#')

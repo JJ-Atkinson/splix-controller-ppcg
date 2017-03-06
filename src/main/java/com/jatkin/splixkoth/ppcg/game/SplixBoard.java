@@ -9,10 +9,8 @@ import com.nmerrill.kothcomm.game.players.Submission;
 import org.eclipse.collections.api.list.MutableList;
 import org.eclipse.collections.api.map.MutableMap;
 import org.eclipse.collections.api.set.MutableSet;
-import org.eclipse.collections.api.stack.MutableStack;
 import org.eclipse.collections.impl.factory.Maps;
 import org.eclipse.collections.impl.factory.Sets;
-import org.eclipse.collections.impl.factory.Stacks;
 
 import java.util.ArrayDeque;
 import java.util.HashSet;
@@ -24,17 +22,17 @@ import java.util.function.Predicate;
  * Basic explanation.
  * A splix map is described by a map of 2d points and a splix point.
  * Each 2d point shows where the splix point is located, and the splix
- * point shows what is happening at that point. A splix point `getTypeOfClaimer`
+ * point shows what is happening at that point. A splix point `getClaimer`
  * shows that the line is part of the trail of that player. This is
  * only set when a player crosses area that is not owned by him. When
  * he has a trail and reattaches to himself, all points that have
- * `getTypeOfClaimer` are converted to normal points and a flood
+ * `getClaimer` are converted to normal points and a flood
  * fill is triggered.
  *
  * Created by Jarrett on 02/01/17.
  */
 public class SplixBoard extends NeighborhoodGraphMap<Point2D, SplixPoint> {
-    private MutableMap<Submission<SplixPlayer>, Point2D> playerPositions = Maps.mutable.empty();
+    private MutableMap<SplixPlayer, Point2D> playerPositions = Maps.mutable.empty();
 
     private final SquareRegion selfBounds;
     private final MutableSet<Point2D> borderPoints;
@@ -69,7 +67,7 @@ public class SplixBoard extends NeighborhoodGraphMap<Point2D, SplixPoint> {
         }
     }
     
-    public MutableMap<Submission<SplixPlayer>, Point2D> getPlayerPositions() {
+    public MutableMap<SplixPlayer, Point2D> getPlayerPositions() {
         return playerPositions.clone();
     }
 
@@ -79,15 +77,15 @@ public class SplixBoard extends NeighborhoodGraphMap<Point2D, SplixPoint> {
      * @param players
      * @param random
      */
-    protected void initPlayers(MutableMap<Submission<SplixPlayer>, Point2D> playerPositions_) {
+    protected void initPlayers(MutableMap<SplixPlayer, Point2D> playerPositions_) {
 
-        for (Submission<SplixPlayer> player : playerPositions_.keySet()) {
+        for (SplixPlayer player : playerPositions_.keySet()) {
             Point2D position = playerPositions_.get(player);
             for (int x = -2; x <= 2; x++) {
                 for (int y = -2; y <= 2; y++) {
                     Point2D pointOfBase = Utils.addPoints(new Point2D(x, y), position);
                     if (!outOfBounds(pointOfBase))
-                        get(pointOfBase).setTypeOfOwner(player);
+                        get(pointOfBase).setOwner(player);
                 }
             }
 
@@ -99,7 +97,7 @@ public class SplixBoard extends NeighborhoodGraphMap<Point2D, SplixPoint> {
      * Do not use except for testing. Moves the player from a position to the location. Does
      * not take into account the trail it might leave behind.
      */
-    protected void putPlayerInPosition(Submission<SplixPlayer> player, Point2D pos) {playerPositions.put(player, pos);}
+    protected void putPlayerInPosition(SplixPlayer player, Point2D pos) {playerPositions.put(player, pos);}
 
     /**
      * Get a view of a board. Primarily used for giving a player a view around him.
@@ -124,12 +122,13 @@ public class SplixBoard extends NeighborhoodGraphMap<Point2D, SplixPoint> {
      * run for all players.
      * @param players
      */
-    public void killPlayers(Set<Submission<SplixPlayer>> players) {
-        for (Submission<SplixPlayer> player : players) {
+    public void killPlayers(Set<SplixPlayer> players) {
+        for (SplixPlayer player : players) {
             // this makes me sad. so inefficient.
-            for (Point2D point : locations().select(x -> get(x).getTypeOfOwner() == player))
-                get(point).setTypeOfOwner(null);
-            for (Point2D point : locations().select(x -> get(x).getTypeOfClaimer() == player))
+            
+            for (Point2D point : locations().select(x -> get(x).getOwner() == player))
+                get(point).setOwner(null);
+            for (Point2D point : locations().select(x -> get(x).getClaimer() == player))
                 get(point).setTypeOfClaimer(null);
 
             playerPositions.remove(player);
@@ -143,12 +142,12 @@ public class SplixBoard extends NeighborhoodGraphMap<Point2D, SplixPoint> {
      * player who connected.
      */
     public void checkPlayerTrailsConnected() {
-        for (Submission<SplixPlayer> player : playerPositions.keySet()) {
+        for (SplixPlayer player : playerPositions.keySet()) {
             Point2D pos = playerPositions.get(player);
-            if (get(pos).getTypeOfOwner() == player) {// player has entered his own territory
-                Set<Point2D> trail = floodSearch(pos, p -> get(p).getTypeOfClaimer() == player);
+            if (get(pos).getOwner() == player) {// player has entered his own territory
+                Set<Point2D> trail = floodSearch(pos, p -> get(p).getClaimer() == player); 
                 trail.forEach(t -> get(t).setTypeOfClaimer(null));
-                trail.forEach(t -> get(t).setTypeOfOwner(player));
+                trail.forEach(t -> get(t).setOwner(player));
                 if (!trail.isEmpty())
                     fillPlayerCapturedArea(player);
             }
@@ -161,9 +160,9 @@ public class SplixBoard extends NeighborhoodGraphMap<Point2D, SplixPoint> {
      *
      * @param whoToCheck
      */
-    public void fillPlayerCapturedArea(Submission<SplixPlayer> whoToCheck) {
+    public void fillPlayerCapturedArea(SplixPlayer whoToCheck) {
         MutableSet<Point2D> allPoints = locations();
-        MutableSet<Point2D> alreadyOwnedSpace = allPoints.select(x -> get(x).getTypeOfOwner() == whoToCheck);
+        MutableSet<Point2D> alreadyOwnedSpace = allPoints.select(x -> get(x).getOwner() == whoToCheck);
         MutableSet<Point2D> checkSpace = allPoints.difference(alreadyOwnedSpace);
         MutableSet<Set<Point2D>> spacesToExamine = Sets.mutable.empty();
         MutableSet<Point2D> otherPlayerPositionsSet = Sets.mutable.ofAll(playerPositions.values());
@@ -171,11 +170,10 @@ public class SplixBoard extends NeighborhoodGraphMap<Point2D, SplixPoint> {
 
         while (checkSpace.notEmpty()) {
             Point2D start = checkSpace.iterator().next();
-            Set<Point2D> connectedPoints = floodSearch(start, point -> get(point).getTypeOfOwner() != whoToCheck);
+            Set<Point2D> connectedPoints = floodSearch(start, point -> get(point).getOwner() != whoToCheck);
             spacesToExamine.add(connectedPoints);
             checkSpace.removeAll(connectedPoints);
         }
-//        new HashSet().re
 
         for (Set<Point2D> space : spacesToExamine) {
             // no points intersect boarder - no area that can be filled can intersect the boarder
@@ -184,17 +182,16 @@ public class SplixBoard extends NeighborhoodGraphMap<Point2D, SplixPoint> {
                 // if the space intersects any other players, we can't fill in
                 // set contains true if we can't fill in
                 boolean canFillIn = !space.removeAll(otherPlayerPositionsSet);
-//                boolean canFillIn = space.intersect(otherPlayerPositionsSet).size() == 0;
 
                 if (canFillIn) {
-                    space.forEach(p -> get(p).setTypeOfOwner(whoToCheck));
+                    space.forEach(p -> get(p).setOwner(whoToCheck));
                 }
             }
         }
     }
 
-    public int countPointsOwnedByPlayer(Submission<SplixPlayer> player) {
-        return locations().count(p -> get(p).getTypeOfOwner() == player);
+    public int countPointsOwnedByPlayer(SplixPlayer player) {
+        return locations().count(p -> get(p).getOwner() == player);
     }
 
     public Set<Point2D> floodSearch(Point2D start, Predicate<Point2D> isAccepted) {
@@ -217,17 +214,18 @@ public class SplixBoard extends NeighborhoodGraphMap<Point2D, SplixPoint> {
         return ret;
     }
 
+
     /**
      * Returns a map of players : who killed them.
      * @param playerMoves Possible moves.
      * @return
      */
-    protected MutableMap<Submission<SplixPlayer>, Submission<SplixPlayer>> getDeathsFromMoves(MutableMap<Submission<?>, Direction> playerMoves) {
-        MutableMap<Submission<?>, Point2D> newPlayerPositions = Maps.mutable.empty();
-        MutableMap<Submission<SplixPlayer>, Submission<SplixPlayer>> deadPlayers =
+    protected MutableMap<SplixPlayer, SplixPlayer> getDeathsFromMoves(MutableMap<SplixPlayer, Direction> playerMoves) {
+        MutableMap<SplixPlayer, Point2D> newPlayerPositions = Maps.mutable.empty();
+        MutableMap<SplixPlayer, SplixPlayer> deadPlayers =
                 Maps.mutable.empty();
 
-        MutableList<Submission<SplixPlayer>> players = playerPositions.keysView().toList();
+        MutableList<SplixPlayer> players = playerPositions.keysView().toList();
         players.forEach(player -> newPlayerPositions.put(player,
                         Utils.addPoints(playerPositions.get(player), playerMoves.get(player).vector)));
         
@@ -236,15 +234,15 @@ public class SplixBoard extends NeighborhoodGraphMap<Point2D, SplixPoint> {
                 deadPlayers.put(p, p);
         });
         players = players.select(p -> !deadPlayers.keySet().contains(p));// remove wall hitters
-        MutableSet<Submission<SplixPlayer>> playersThatCanDie = players
-                         .select(p -> get(newPlayerPositions.get(p)).getTypeOfOwner() != p).toSet();
+        MutableSet<SplixPlayer> playersThatCanDie = players
+                         .select(p -> get(newPlayerPositions.get(p)).getOwner() != p).toSet();
 
         for (int i = 0; i < players.size(); i++) {
 
-            Submission<SplixPlayer> currentPlayer = players.get(i);
+            SplixPlayer currentPlayer = players.get(i);
             
             // check trail intersection
-            Submission<SplixPlayer> newPositionClaimer = get(newPlayerPositions.get(currentPlayer)).getTypeOfClaimer();
+            SplixPlayer newPositionClaimer = get(newPlayerPositions.get(currentPlayer)).getClaimer();
             if (newPositionClaimer != null && playersThatCanDie.contains(newPositionClaimer)) {
                 deadPlayers.put(newPositionClaimer, currentPlayer);
             }
@@ -259,7 +257,7 @@ public class SplixBoard extends NeighborhoodGraphMap<Point2D, SplixPoint> {
                 // new position is inside a player's area but his old position is occupied
                 // by another player. This is rolled into `playersThatCanDie`.
                 
-                Submission<SplixPlayer> otherPlayer = players.get(j);
+                SplixPlayer otherPlayer = players.get(j);
                 // point old, point new
                 Point2D currPlayerO = playerPositions.get(currentPlayer);
                 Point2D otherPlayerO = playerPositions.get(otherPlayer);
@@ -291,16 +289,16 @@ public class SplixBoard extends NeighborhoodGraphMap<Point2D, SplixPoint> {
      * the position is updated to say that it is claimed by the player.
      * @param playerMoves
      */
-    public void applyMoves(Map<Submission<?>, Direction> playerMoves) {
-        MutableMap<Submission<SplixPlayer>, Point2D> newPlayerPositions = Maps.mutable.empty();
+    public void applyMoves(Map<SplixPlayer, Direction> playerMoves) {
+        MutableMap<SplixPlayer, Point2D> newPlayerPositions = Maps.mutable.empty();
 
-        MutableList<Submission<SplixPlayer>> players = playerPositions.keysView().toList();
+        MutableList<SplixPlayer> players = playerPositions.keysView().toList();
         players.forEach(player -> newPlayerPositions.put(player,
                 Utils.addPoints(playerPositions.get(player), playerMoves.get(player).vector)));
 
         newPlayerPositions.forEach((player, nPos) -> {
             Point2D oPos = playerPositions.get(player);
-            if (get(oPos).getTypeOfOwner() != player)
+            if (get(oPos).getOwner() != player)
                 get(oPos).setTypeOfClaimer(player);
 
             playerPositions.put(player, nPos);

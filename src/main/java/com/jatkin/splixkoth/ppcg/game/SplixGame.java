@@ -27,7 +27,7 @@ public class SplixGame extends IteratedGame<SplixPlayer> {
     
     private SplixBoard board;
     private Scoreboard<SplixPlayer> scoreboard;
-    private final MutableSet<Submission<SplixPlayer>> deadPlayers = Sets.mutable.empty();
+    private final MutableSet<SplixPlayer> deadPlayers = Sets.mutable.empty();
     
     public SplixGame(int size) {
         this.size = size;
@@ -48,10 +48,10 @@ public class SplixGame extends IteratedGame<SplixPlayer> {
     }
     
     
-    private MutableMap<Submission<SplixPlayer>, Point2D> getPlayerPositions() {
-        MutableMap<Submission<SplixPlayer>, Point2D> ret = Maps.mutable.empty();
+    private MutableMap<SplixPlayer, Point2D> getPlayerPositions() {
+        MutableMap<SplixPlayer, Point2D> ret = Maps.mutable.empty();
         players.forEach(p -> 
-            ret.put(p.getType(), new Point2D(random.nextInt(board.getBounds().getRight()-1), random.nextInt(board.getBounds().getTop() - 1)))
+            ret.put(p, new Point2D(random.nextInt(board.getBounds().getRight()-1), random.nextInt(board.getBounds().getTop() - 1)))
         );
         return ret;
     }
@@ -62,14 +62,14 @@ public class SplixGame extends IteratedGame<SplixPlayer> {
     public void step() {
         super.step();
         
-        MutableMap<Submission<?>, Direction> playerMoves = Maps.mutable.empty();
+        MutableMap<SplixPlayer, Direction> playerMoves = Maps.mutable.empty();
 
-        players.select(p -> !deadPlayers.contains(p.getType())).forEach(each -> 
-                playerMoves.put(each.getType(),
+        players.select(p -> !deadPlayers.contains(p)).forEach(each -> 
+                playerMoves.put(each,
                         each.makeMove(new ReadOnlyGame(this),
-                                 getReadOnlyBoardForPosition(board.getPlayerPositions().get(each.getType())))));
+                                 getReadOnlyBoardForPosition(board.getPlayerPositions().get(each)))));
         
-        MutableMap<Submission<SplixPlayer>, Submission<SplixPlayer>> deaths = board.getDeathsFromMoves(playerMoves);
+        MutableMap<SplixPlayer, SplixPlayer> deaths = board.getDeathsFromMoves(playerMoves);
         board.killPlayers(deaths.keySet());
         deadPlayers.addAll(deaths.keySet());
         deaths.forEach((p, killer) -> scoreboard.addScore(getPlayerForType(killer), scoreForKill));
@@ -79,11 +79,11 @@ public class SplixGame extends IteratedGame<SplixPlayer> {
         
         // perform a fill for all players - it may have removed a player that was preventing filling for another player
         if (deaths.notEmpty())
-            players.forEach(p -> board.fillPlayerCapturedArea(p.getType()));
+            players.forEach(p -> board.fillPlayerCapturedArea(p));
     }
 
-    private SplixPlayer getPlayerForType(Submission<SplixPlayer> type) {
-        return players.select(p -> p.getType().equals(type)).getOnly();
+    private SplixPlayer getPlayerForType(SplixPlayer player) {
+        return players.select(p -> p.equals(player)).getOnly();
     }
 
     public ReadOnlyBoard getReadOnlyBoardForPosition(Point2D pos) {
@@ -117,13 +117,12 @@ public class SplixGame extends IteratedGame<SplixPlayer> {
         if (hasComputedScores)
             return scoreboard;
         
-        MutableSet<Submission<SplixPlayer>> deadPlayers = 
-                players.collect(SplixPlayer::getType).toSet()
-                        .difference(board.getPlayerPositions().keysView().toSet());
+        MutableSet<SplixPlayer> deadPlayers = 
+                players.toSet().difference(board.getPlayerPositions().keysView().toSet());
         deadPlayers.forEach(p -> scoreboard.setScore(getPlayerForType(p), 0));
         
-        players.select(p -> !deadPlayers.contains(p.getType()))
-               .forEach(p -> scoreboard.addScore(p, board.countPointsOwnedByPlayer(p.getType())));
+        players.select(p -> !deadPlayers.contains(p))
+               .forEach(p -> scoreboard.addScore(p, board.countPointsOwnedByPlayer(p)));
         hasComputedScores = true;
         return scoreboard;
     }

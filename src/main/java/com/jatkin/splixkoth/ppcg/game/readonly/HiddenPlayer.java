@@ -7,9 +7,9 @@ import com.nmerrill.kothcomm.game.players.Submission;
  * Created by Jarrett on 02/14/17.
  */
 public class HiddenPlayer {
-    private Submission<SplixPlayer> backing;
+    private SplixPlayer backing;
     
-    public HiddenPlayer(Submission<SplixPlayer> backing) {
+    public HiddenPlayer(SplixPlayer backing) {
         this.backing = backing;
     }
 
