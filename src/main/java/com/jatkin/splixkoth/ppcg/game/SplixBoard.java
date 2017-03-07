@@ -5,10 +5,10 @@ import com.nmerrill.kothcomm.game.maps.Point2D;
 import com.nmerrill.kothcomm.game.maps.graphmaps.NeighborhoodGraphMap;
 import com.nmerrill.kothcomm.game.maps.graphmaps.bounds.point2D.SquareRegion;
 import com.nmerrill.kothcomm.game.maps.graphmaps.neighborhoods.VonNeumannNeighborhood;
-import com.nmerrill.kothcomm.game.players.Submission;
 import org.eclipse.collections.api.list.MutableList;
 import org.eclipse.collections.api.map.MutableMap;
 import org.eclipse.collections.api.set.MutableSet;
+import org.eclipse.collections.impl.factory.Lists;
 import org.eclipse.collections.impl.factory.Maps;
 import org.eclipse.collections.impl.factory.Sets;
 
@@ -118,24 +118,39 @@ public class SplixBoard extends NeighborhoodGraphMap<Point2D, SplixPoint> {
     }
 
     /**
-     * Remove all remnants of a player from the board. Triggers a flood fill
-     * run for all players.
+     * Remove all remnants of a player from the board. 
      * @param players
      */
     public void killPlayers(Set<SplixPlayer> players) {
         for (SplixPlayer player : players) {
-            // this makes me sad. so inefficient.
-            
             for (Point2D point : locations().select(x -> get(x).getOwner() == player))
                 get(point).setOwner(null);
             for (Point2D point : locations().select(x -> get(x).getClaimer() == player))
-                get(point).setTypeOfClaimer(null);
+                get(point).setClaimer(null);
 
             playerPositions.remove(player);
         }
-        playerPositions.keySet().forEach(this::fillPlayerCapturedArea);
+//        playerPositions.keySet().forEach(this::fillPlayerCapturedArea);
     }
 
+    /**
+     * Looks at all players and identifies if any of them have a finished trail.
+     * If they do the trail is converted to normal line. Triggers a fill for any
+     * player who connected.
+     */
+//    public void checkPlayerTrailsConnected() {
+//        for (SplixPlayer player : playerPositions.keySet()) {
+//            Point2D pos = playerPositions.get(player);
+//            if (get(pos).getOwner() == player) {// player has entered his own territory
+//                Set<Point2D> trail = floodSearch(pos, p -> get(p).getClaimer() == player); // speed up conversion.  
+//                trail.forEach(t -> get(t).setClaimer(null));
+//                trail.forEach(t -> get(t).setOwner(player));
+//                if (!trail.isEmpty())
+//                    fillPlayerCapturedArea(player);
+//            }
+//        }
+//    }
+    
     /**
      * Looks at all players and identifies if any of them have a finished trail.
      * If they do the trail is converted to normal line. Triggers a fill for any
@@ -145,11 +160,11 @@ public class SplixBoard extends NeighborhoodGraphMap<Point2D, SplixPoint> {
         for (SplixPlayer player : playerPositions.keySet()) {
             Point2D pos = playerPositions.get(player);
             if (get(pos).getOwner() == player) {// player has entered his own territory
-                Set<Point2D> trail = floodSearch(pos, p -> get(p).getClaimer() == player); 
-                trail.forEach(t -> get(t).setTypeOfClaimer(null));
+                Set<Point2D> trail = floodSearch(pos, p -> get(p).getClaimer() == player); // speed up conversion.  
+                trail.forEach(t -> get(t).setClaimer(null));
                 trail.forEach(t -> get(t).setOwner(player));
                 if (!trail.isEmpty())
-                    fillPlayerCapturedArea(player);
+                    fillPlayerCapturedArea(player, trail);
             }
         }
     }
@@ -160,32 +175,51 @@ public class SplixBoard extends NeighborhoodGraphMap<Point2D, SplixPoint> {
      *
      * @param whoToCheck
      */
-    public void fillPlayerCapturedArea(SplixPlayer whoToCheck) {
-        MutableSet<Point2D> allPoints = locations();
-        MutableSet<Point2D> alreadyOwnedSpace = allPoints.select(x -> get(x).getOwner() == whoToCheck);
-        MutableSet<Point2D> checkSpace = allPoints.difference(alreadyOwnedSpace);
-        MutableSet<Set<Point2D>> spacesToExamine = Sets.mutable.empty();
-        MutableSet<Point2D> otherPlayerPositionsSet = Sets.mutable.ofAll(playerPositions.values());
-        otherPlayerPositionsSet.remove(playerPositions.get(whoToCheck));
+//    public void fillPlayerCapturedArea(SplixPlayer whoToCheck) {
+//        MutableSet<Point2D> allPoints = locations();
+//        MutableSet<Point2D> alreadyOwnedSpace = allPoints.select(x -> get(x).getOwner() == whoToCheck);
+//        MutableSet<Point2D> checkSpace = allPoints.difference(alreadyOwnedSpace);
+//        MutableSet<Set<Point2D>> spacesToExamine = Sets.mutable.empty();
+//        MutableSet<Point2D> otherPlayerPositionsSet = Sets.mutable.ofAll(playerPositions.values());
+//        otherPlayerPositionsSet.remove(playerPositions.get(whoToCheck));
+//
+//        while (checkSpace.notEmpty()) {
+//            Point2D start = checkSpace.iterator().next();
+//            Set<Point2D> connectedPoints = floodSearch(start, point -> get(point).getOwner() != whoToCheck);
+//            spacesToExamine.add(connectedPoints);
+//            checkSpace.removeAll(connectedPoints);
+//        }
+//
+//        for (Set<Point2D> space : spacesToExamine) {
+//            // no points intersect boarder - no area that can be filled can intersect the boarder
+//            boolean anyIntersectBoarder = space.removeAll(borderPoints);
+//            if (!anyIntersectBoarder) {
+//                // if the space intersects any other players, we can't fill in
+//                // set contains true if we can't fill in
+//                boolean canFillIn = !space.removeAll(otherPlayerPositionsSet);
+//
+//                if (canFillIn) {
+//                    space.forEach(p -> get(p).setOwner(whoToCheck));
+//                }
+//            }
+//        }
+//    }
+    
+    
+    /**
+     * Looks at the land owned by a player and identifies empty spaces that
+     * need to be filled. Incredibly inefficient, so use sparingly.
+     *
+     * @param whoToCheck
+     */
+    public void fillPlayerCapturedArea(SplixPlayer whoToCheck, Set<Point2D> areaChanged) {
+        MutableSet<Point2D> previouslyVisitedLocations = Sets.mutable.empty();
+        MutableList<Point2D> checkSpace = getAdjacent(areaChanged);
 
-        while (checkSpace.notEmpty()) {
-            Point2D start = checkSpace.iterator().next();
-            Set<Point2D> connectedPoints = floodSearch(start, point -> get(point).getOwner() != whoToCheck);
-            spacesToExamine.add(connectedPoints);
-            checkSpace.removeAll(connectedPoints);
-        }
-
-        for (Set<Point2D> space : spacesToExamine) {
-            // no points intersect boarder - no area that can be filled can intersect the boarder
-            boolean anyIntersectBoarder = space.removeAll(borderPoints);
-            if (!anyIntersectBoarder) {
-                // if the space intersects any other players, we can't fill in
-                // set contains true if we can't fill in
-                boolean canFillIn = !space.removeAll(otherPlayerPositionsSet);
-
-                if (canFillIn) {
-                    space.forEach(p -> get(p).setOwner(whoToCheck));
-                }
+        for (Point2D pt : checkSpace) {
+            Set<Point2D> points = floodSearchHelperFillPlayerCapturedArea(pt, whoToCheck, previouslyVisitedLocations);
+            if (points != null) {// valid fill that didn't hit wall
+                points.forEach(x -> get(x).setOwner(whoToCheck));
             }
         }
     }
@@ -194,7 +228,13 @@ public class SplixBoard extends NeighborhoodGraphMap<Point2D, SplixPoint> {
         return locations().count(p -> get(p).getOwner() == player);
     }
 
-    public Set<Point2D> floodSearch(Point2D start, Predicate<Point2D> isAccepted) {
+    /**
+     * Perform a flood fill from the start node, determines if the point is a border by `!isAccepted.test(point)`
+     * @param start
+     * @param isAccepted
+     * @return
+     */
+    private Set<Point2D> floodSearch(Point2D start, Predicate<Point2D> isAccepted) {
         Set<Point2D> ret = new HashSet<>();
         ArrayDeque<Point2D> nodesToExamine = new ArrayDeque<>();
         nodesToExamine.add(start);
@@ -211,6 +251,67 @@ public class SplixBoard extends NeighborhoodGraphMap<Point2D, SplixPoint> {
             if (!ret.contains(p3) && inBounds(p3) && isAccepted.test(p3)) nodesToExamine.push(p3);
             if (!ret.contains(p4) && inBounds(p4) && isAccepted.test(p4)) nodesToExamine.push(p4);
         }
+        return ret;
+    }
+
+    /**
+     * Specific implementation of floodSearch tailored for fillPlayerCapturedArea. Mutates knownInvalidLocations
+     * @param start
+     * @param boundary
+     * @return
+     */
+    private Set<Point2D>  floodSearchHelperFillPlayerCapturedArea(Point2D start, SplixPlayer boundary, MutableSet<Point2D> previouslyVisitedLocations) {
+        Set<Point2D> ret = new HashSet<>();
+        MutableSet<Point2D> invalidFillPositions = playerPositions.valuesView().toSet();
+        invalidFillPositions.remove(playerPositions.get(boundary));
+        ArrayDeque<Point2D> nodesToExamine = new ArrayDeque<>();
+        nodesToExamine.add(start);
+        while (!nodesToExamine.isEmpty()) {
+            Point2D node = nodesToExamine.pop();
+            ret.add(node);
+
+            int[][] dirs = {new int[]{1, 0}, new int[]{-1, 0}, new int[]{0, 1}, new int[]{0, -1}};
+            for (int[] dir : dirs) {
+                Point2D ptToCheck = new Point2D(node.getX() + dir[0], node.getY() + dir[1]);
+                boolean intersectsOldSpace = previouslyVisitedLocations.contains(ptToCheck);
+
+                if (!intersectsOldSpace && inBounds(ptToCheck) && get(ptToCheck).getOwner() != boundary) {
+                    if (borderPoints.contains(ptToCheck)
+                             || invalidFillPositions.contains(ptToCheck)) {
+                            // if we can reach the boarder or another knownInvalidLocation, we have nothing else to do.
+                        return null;
+                    }
+                    previouslyVisitedLocations.addAll(ret);
+                    nodesToExamine.push(ptToCheck);
+                }
+                
+                if (intersectsOldSpace)
+                    return null;
+            }
+        }
+        return ret;
+    }
+    
+
+    /**
+     * Get a list of all points next to the given set, excluding the set itself.
+     * @param points
+     * @return
+     */
+    private MutableList<Point2D> getAdjacent(Set<Point2D> points) {
+        MutableList<Point2D> ret = Lists.mutable.empty();
+        for (Point2D point : points) {
+            Point2D p1 = new Point2D(point.getX()-1, point.getY());
+            Point2D p2 = new Point2D(point.getX()+1, point.getY());
+            Point2D p3 = new Point2D(point.getX(), point.getY()+1);
+            Point2D p4 = new Point2D(point.getX(), point.getY()-1);
+            
+            if (!ret.contains(p1) && inBounds(p1) && !points.contains(p1)) ret.add(p1);
+            if (!ret.contains(p2) && inBounds(p2) && !points.contains(p2)) ret.add(p2);
+            if (!ret.contains(p3) && inBounds(p3) && !points.contains(p3)) ret.add(p3);
+            if (!ret.contains(p4) && inBounds(p4) && !points.contains(p4)) ret.add(p4);
+        }
+        
         return ret;
     }
 
@@ -299,7 +400,7 @@ public class SplixBoard extends NeighborhoodGraphMap<Point2D, SplixPoint> {
         newPlayerPositions.forEach((player, nPos) -> {
             Point2D oPos = playerPositions.get(player);
             if (get(oPos).getOwner() != player)
-                get(oPos).setTypeOfClaimer(player);
+                get(oPos).setClaimer(player);
 
             playerPositions.put(player, nPos);
         });
@@ -314,5 +415,15 @@ public class SplixBoard extends NeighborhoodGraphMap<Point2D, SplixPoint> {
         } catch (Exception e) {
             return false;
         }
+    }
+
+    @Override
+    public boolean inBounds(Point2D point) {
+        return selfBounds.inBounds(point);
+    }
+
+    @Override
+    public boolean outOfBounds(Point2D point) {
+        return selfBounds.outOfBounds(point);
     }
 }

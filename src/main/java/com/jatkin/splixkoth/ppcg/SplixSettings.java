@@ -1,6 +1,7 @@
 package com.jatkin.splixkoth.ppcg;
 
 import com.jatkin.splixkoth.ppcg.game.SplixPlayer;
+import com.jatkin.splixkoth.ppcg.players.HunterBot;
 import com.jatkin.splixkoth.ppcg.players.TrapBot;
 import com.nmerrill.kothcomm.game.maps.Point2D;
 import com.nmerrill.kothcomm.game.players.Submission;
@@ -19,7 +20,7 @@ public class SplixSettings {
     
     public static final MutableList<Submission> players = Lists.mutable.of(
             new Submission<>("TrapBot 1", TrapBot::new),
-            new Submission<>("TrapBot 2", TrapBot::new)
+            new Submission<>("HunterBot 1", HunterBot::new)
     );
     public static final int playersPerGame = 2;
     

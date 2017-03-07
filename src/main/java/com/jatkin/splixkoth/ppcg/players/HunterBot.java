@@ -11,8 +11,11 @@ import com.nmerrill.kothcomm.game.maps.Point2D;
 import com.nmerrill.kothcomm.game.maps.graphmaps.bounds.point2D.SquareRegion;
 import javafx.util.Pair;
 import org.eclipse.collections.api.bag.MutableBag;
+import org.eclipse.collections.api.list.ImmutableList;
 import org.eclipse.collections.api.map.MutableMap;
+import org.eclipse.collections.api.set.ImmutableSet;
 import org.eclipse.collections.impl.factory.Lists;
+import org.eclipse.collections.impl.factory.Sets;
 
 import javax.rmi.CORBA.Util;
 import java.util.Comparator;
@@ -25,28 +28,45 @@ import java.util.Comparator;
 public class HunterBot extends SplixPlayer {
 
 
+    private Point2D lastTarget;
+    
     @Override
     protected Direction makeMove(ReadOnlyGame game, ReadOnlyBoard board) {
-        MutableMap<Point2D, ReadOnlySplixPoint> global = board.getGlobal();
-        MutableMap<Point2D, ReadOnlySplixPoint> targets = global.select((pt, rosp) -> 
-                rosp.getClaimer() != getThisHidden() && rosp.getOwner() != new HiddenPlayer(null));
-        if (targets.size() == 0)
-            return Direction.values()[getRandom().nextInt(4)];// could hit itself, need to fix
-
         Point2D thisPos = board.getPosition(this);
-        Point2D target = targets.keysView().min(Comparator.comparingInt(t -> Utils.realMovementDist(thisPos, t)));
-        Point2D dist = Utils.addPoints(thisPos, Utils.multPoint(target, -1));
+        MutableMap<Point2D, ReadOnlySplixPoint> global = board.getGlobal();
+        MutableMap<Point2D, ReadOnlySplixPoint> targets = global.select((pt, rosp) ->
+                !rosp.getClaimer().equals(getThisHidden()) 
+                        && !rosp.getClaimer().equals(new HiddenPlayer(null)));
         
-        if (Math.abs(dist.getX()) > Math.abs(dist.getY()));
+        if (targets.size() == 0 && lastTarget == null) {
+            ImmutableList<Direction> possibleMoves = Lists.immutable.of(Direction.values())
+                    .select(x -> {
+                        Point2D pos = Utils.addPoints(x.vector, thisPos);
+                        return !global.get(pos).getClaimer().equals(getThisHidden()) && !board.getBounds().outOfBounds(pos);
+                    });
+            return possibleMoves.size() != 0 ? possibleMoves.get(0) : Direction.East;
+        }
 
-        return null;
+        Point2D target = null;
+        if (targets.size() == 0) target = lastTarget;
+        else targets.keysView().min(Comparator.comparingInt(t -> Utils.realMovementDist(thisPos, t)));
+        
+        Point2D dist = Utils.addPoints(Utils.multPoint(thisPos, -1), target);
+        
+        lastTarget = target;
+        if (Math.abs(dist.getX()) > Math.abs(dist.getY()))
+            return getDirectionFroPoint(new Point2D(normalizeNum(dist.getX()), 0));
+        else
+            return getDirectionFroPoint(new Point2D(0, normalizeNum(dist.getY())));
     }
+
+    private Direction getDirectionFroPoint(Point2D dir) {
+        return Sets.immutable.of(Direction.values()).select(d -> d.vector.equals(dir)).getOnly();
+    }
+
+    private int normalizeNum(int n) { if (n < -1) return -1; if (n > 1) return 1; else return n;}
     
-    private int normalizeNum(int n) { if (n < -1) return -1; else if (n > 1) return 1; else return n;}
-
     
-
-
     @Override
     public boolean equals(Object o) {
         return this == o;

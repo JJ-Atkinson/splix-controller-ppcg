@@ -27,6 +27,7 @@ import org.eclipse.collections.impl.factory.Maps;
 import org.eclipse.collections.impl.factory.Sets;
 
 import java.util.Random;
+import java.util.Set;
 
 public class UIController {
     SplixGame game;
@@ -86,6 +87,7 @@ public class UIController {
 
         globalGameViewerView = new GameViewer(globalViewCanvas, () -> game.getBoard(), SplixBoard::getBounds, playerColors);
         localGameViewerView = new GameViewer(localViewCanvas, () -> game.getBoard(), (board -> {
+            ensurePlayerFollowedNotDead();
             Point2D playerPos = board.getPlayerPositions().get(playerFollowed);
             return game.getReadOnlyBoardForPosition(playerPos).viewingArea;
         }), playerColors);
@@ -123,6 +125,13 @@ public class UIController {
         SimpleIntegerProperty turnsLeftIntProp = new SimpleIntegerProperty(game.getRemainingIterations());
         turnsLeft.textProperty().bind(Bindings.convert(turnsLeftIntProp));
         gameRunnerControls.addGameNode(() -> turnsLeftIntProp.set(game.getRemainingIterations()));
+    }
+
+    private void ensurePlayerFollowedNotDead() {
+        Set<SplixPlayer> alivePlayers = game.getPlayerPositions().keySet();
+        if (!alivePlayers.contains(playerFollowed)) {
+            playerFollowed = alivePlayers.iterator().next();
+        }
     }
 
 }

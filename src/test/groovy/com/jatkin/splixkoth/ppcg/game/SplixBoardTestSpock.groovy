@@ -3,7 +3,6 @@ package com.jatkin.splixkoth.ppcg.game
 import com.jatkin.splixkoth.ppcg.players.TrapBot
 import com.nmerrill.kothcomm.game.maps.Point2D
 import com.nmerrill.kothcomm.game.maps.graphmaps.bounds.point2D.SquareRegion
-import com.nmerrill.kothcomm.game.players.Submission
 import org.eclipse.collections.api.map.MutableMap
 import org.eclipse.collections.impl.factory.Maps
 import org.eclipse.collections.impl.factory.Sets
@@ -46,8 +45,8 @@ class SplixBoardTestSpock extends Specification {
     def failingFloodSearchData = 
             """xxxxxxx
               |   x  x
-              |   x- x
-              |   x  x
+              |   x- 3
+              |   x  #
               |xxxxxxx
               |xxxxxxx
               |xxxxxxx
@@ -70,8 +69,42 @@ class SplixBoardTestSpock extends Specification {
     def passingFloodSearchData = 
             """xxxxxxx
               |   x  x
-              |   x  x
-              |   x  x
+              |   x  3
+              |   x  #
+              |xxxxxxx
+              |xxxxxxx
+              |xxxxxxx
+              |xxxxxxx
+              |xxxxxxx
+              |xxxxxxx
+              |+++++++
+              |+++++++
+              |+++++++
+              |+++++++
+              |+++++++""".stripMargin()
+    
+    def thinLineFloodSearchData = 
+            """xxxxxxx
+              |     xx
+              |     x3
+              |     x#
+              |xxxxxxx
+              |xxxxxxx
+              |xxxxxxx
+              |xxxxxxx
+              |xxxxxxx
+              |xxxxxxx
+              |+++++++
+              |+++++++
+              |+++++++
+              |+++++++
+              |+++++++""".stripMargin()
+    
+    def allSpaceSurroundedFloodSearchData = 
+            """xxxxxxx
+              |x     x
+              |x     3
+              |x     #
               |xxxxxxx
               |xxxxxxx
               |xxxxxxx
@@ -132,21 +165,56 @@ class SplixBoardTestSpock extends Specification {
                 Maps.mutable.of(player1, Direction.North, player2, Direction.West)) ==
                 Maps.mutable.of(player1, player2)
     }
+
     
+    
+    /* ***************************************************************************************
+       ****************************                                 **************************
+       ****************************   Test fillPlayerCapturedArea   **************************
+       ****************************                                 **************************
+       *************************************************************************************** */
+    
+    
+
     def "players should fill in when they surround area that is not owned by another player"() {
         given: "a board where a player surrounds area"
-        def board = getBoardWithDimsFromData(new Point2D(6, 14), passingFloodSearchData)
-        board.fillPlayerCapturedArea(player1)
+        def board = getBoardWithDimsFromData(new Point2D(6, 14), passingFloodSearchData, false)
+        board.applyMoves(Maps.mutable.of(player1, Direction.South))
+        board.cptc()
         showBoard(board, player1, player2)
         
         expect: "the area to fill in"
         board.countPointsOwnedByPlayer(player1) == 61
     }
     
+    def "players should not change area when the line is 2x thick"() {
+        given: "a board where a player surrounds area"
+        def board = getBoardWithDimsFromData(new Point2D(6, 14), thinLineFloodSearchData, false)
+        board.applyMoves(Maps.mutable.of(player1, Direction.South))
+        board.cptc()
+        showBoard(board, player1, player2)
+        
+        expect: "the area to fill in"
+        board.countPointsOwnedByPlayer(player1) == 55
+    }
+    
+    def "players should fill in when the whole board is filled in"() {
+        given: "a board where a player surrounds area"
+        def board = getBoardWithDimsFromData(new Point2D(6, 14), allSpaceSurroundedFloodSearchData, false)
+        board.applyMoves(Maps.mutable.of(player1, Direction.South))
+        board.cptc()
+        showBoard(board, player1, player2)
+        
+        expect: "the area to fill in"
+        board.countPointsOwnedByPlayer(player1) == 70
+    }
+    
     def "players should not fill in when another player is inside"() {
         given: "a board where a player surrounds some area but another player is inside it"
-        def board = getBoardWithDimsFromData(new Point2D(6, 14), failingFloodSearchData)
-        board.fillPlayerCapturedArea(player1)
+        def board = getBoardWithDimsFromData(new Point2D(6, 14), failingFloodSearchData, false)
+        board.applyMoves(Maps.mutable.of(player1, Direction.South, player2, Direction.South))
+        board.cptc()
+        showBoard(board, player1, player2)
         
         expect:
         board.countPointsOwnedByPlayer(player1) == 55
@@ -183,7 +251,7 @@ class SplixBoardTestSpock extends Specification {
         // get around a behavior specific to loading data in from a string
         // the point where the player is is owned by him - regardless if this is correct
         // so this is fixed by changing that point.
-        board.get(new Point2D(8, 2)).setTypeOfClaimer(player1)
+        board.get(new Point2D(8, 2)).setClaimer(player1)
         board.get(new Point2D(8, 2)).setOwner(null)
         board.checkPlayerTrailsConnected()
         
@@ -196,7 +264,7 @@ class SplixBoardTestSpock extends Specification {
     ********************************************************************/
     
     
-    private def initBoardFromString(String s, SplixBoard board) {
+    private def initBoardFromString(String s, SplixBoard board, boolean setPlayerPositionOwned) {
         def symbolMapping = [('x' as char): {new SplixPoint(player1, null)}, 
                              ('+' as char): {new SplixPoint(player2, null)},
                              (' ' as char): {new SplixPoint(null, null)},
@@ -216,10 +284,12 @@ class SplixBoardTestSpock extends Specification {
 
                 if (c == '#') {
                     board.putPlayerInPosition(player1, pos)
-                    board.put(pos, symbolMapping.get('x' as char)())
+                    if (setPlayerPositionOwned)
+                        board.put(pos, symbolMapping.get('x' as char)())
                 } else if (c == '-') {
                     board.putPlayerInPosition(player2, pos)
-                    board.put(pos, symbolMapping.get('+' as char)())
+                    if (setPlayerPositionOwned)
+                        board.put(pos, symbolMapping.get('+' as char)())
                 } else
                     board.put(pos, symbolMapping.get(c as char)())
             }
@@ -260,10 +330,10 @@ class SplixBoardTestSpock extends Specification {
         System.err.println(sb)
     }
 
-    private SplixBoard getBoardWithDimsFromData(Point2D dims, String whichData) {
+    private SplixBoard getBoardWithDimsFromData(Point2D dims, String whichData, boolean setPlayerPositionOwned = true) {
         def board = new SplixBoard(new SquareRegion(
                 new Point2D(0, 0), dims))
-        initBoardFromString(whichData, board)
+        initBoardFromString(whichData, board, setPlayerPositionOwned)
         return board
     }
     

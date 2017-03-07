@@ -16,6 +16,7 @@ public class Main {
         long now = System.currentTimeMillis();
         KotHCommMultiThread<SplixPlayer, SplixGame> runner = new KotHCommMultiThread<>(() -> new SplixGame(80));
         runner.setThreadCount(8);
+//        runner.
         runner.addSubmission("TrapBot 1.0", TrapBot::new);
         runner.addSubmission("TrapBot 2.0", TrapBot::new);
         runner.setGameSize(2);

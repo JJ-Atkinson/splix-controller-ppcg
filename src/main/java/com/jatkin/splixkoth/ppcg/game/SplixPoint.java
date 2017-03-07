@@ -28,7 +28,7 @@ public class SplixPoint {
 
     public SplixPlayer getClaimer() { return typeOfClaimer; }
 
-    public void setTypeOfClaimer(SplixPlayer typeOfClaimer) { this.typeOfClaimer = typeOfClaimer; }
+    public void setClaimer(SplixPlayer typeOfClaimer) { this.typeOfClaimer = typeOfClaimer; }
 
     @Override
     public boolean equals(Object o) {
