@@ -79,6 +79,7 @@ public class GameViewer implements GameNode {
                 if (board.getBounds().inBounds(loc)) {
                     SplixPoint point = board.get(loc);
                     
+                    
                     double pointXLoc = (loc.getX()-offsetX) * pixlesPerSplixPoint;
                     double pointYLoc = (regionSize - (loc.getY()-offsetY)) * pixlesPerSplixPoint;
     
@@ -101,7 +102,7 @@ public class GameViewer implements GameNode {
                                 pointYLoc + ((1 - percentFillSquareForDeadPoint) / 2) * pixlesPerSplixPoint,
                                 percentFillSquareForDeadPoint * pixlesPerSplixPoint,
                                 percentFillSquareForDeadPoint * pixlesPerSplixPoint);
-                    }
+                    }                    
                 }
             }
         }

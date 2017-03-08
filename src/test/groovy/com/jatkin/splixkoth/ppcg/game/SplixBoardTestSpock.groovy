@@ -180,7 +180,7 @@ class SplixBoardTestSpock extends Specification {
         given: "a board where a player surrounds area"
         def board = getBoardWithDimsFromData(new Point2D(6, 14), passingFloodSearchData, false)
         board.applyMoves(Maps.mutable.of(player1, Direction.South))
-        board.cptc()
+        board.checkPlayerTrailsConnected()
         showBoard(board, player1, player2)
         
         expect: "the area to fill in"
@@ -191,7 +191,7 @@ class SplixBoardTestSpock extends Specification {
         given: "a board where a player surrounds area"
         def board = getBoardWithDimsFromData(new Point2D(6, 14), thinLineFloodSearchData, false)
         board.applyMoves(Maps.mutable.of(player1, Direction.South))
-        board.cptc()
+        board.checkPlayerTrailsConnected()
         showBoard(board, player1, player2)
         
         expect: "the area to fill in"
@@ -202,7 +202,7 @@ class SplixBoardTestSpock extends Specification {
         given: "a board where a player surrounds area"
         def board = getBoardWithDimsFromData(new Point2D(6, 14), allSpaceSurroundedFloodSearchData, false)
         board.applyMoves(Maps.mutable.of(player1, Direction.South))
-        board.cptc()
+        board.checkPlayerTrailsConnected()
         showBoard(board, player1, player2)
         
         expect: "the area to fill in"
@@ -213,7 +213,7 @@ class SplixBoardTestSpock extends Specification {
         given: "a board where a player surrounds some area but another player is inside it"
         def board = getBoardWithDimsFromData(new Point2D(6, 14), failingFloodSearchData, false)
         board.applyMoves(Maps.mutable.of(player1, Direction.South, player2, Direction.South))
-        board.cptc()
+        board.checkPlayerTrailsConnected()
         showBoard(board, player1, player2)
         
         expect:
@@ -246,13 +246,8 @@ class SplixBoardTestSpock extends Specification {
     
     def "checkPlayerTrailConnected should convert a trail to normal line if it is connected and run a fill"() {
         given: "a board where the player has connected"
-        def board = getBoardWithDimsFromData(new Point2D(8, 4), trailConnectedData)
+        def board = getBoardWithDimsFromData(new Point2D(8, 4), trailConnectedData, false)
         board.applyMoves(Maps.mutable.of(player1, Direction.South, player2, Direction.East))
-        // get around a behavior specific to loading data in from a string
-        // the point where the player is is owned by him - regardless if this is correct
-        // so this is fixed by changing that point.
-        board.get(new Point2D(8, 2)).setClaimer(player1)
-        board.get(new Point2D(8, 2)).setOwner(null)
         board.checkPlayerTrailsConnected()
         
         expect: "the board to be filled in and the trail to be converted"
