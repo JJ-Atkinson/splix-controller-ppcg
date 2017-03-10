@@ -19,6 +19,7 @@ import org.eclipse.collections.impl.factory.Sets;
 
 import javax.rmi.CORBA.Util;
 import java.util.Comparator;
+import java.util.Random;
 
 /**
  * Trap bot goes to the wall and traces the entirety around. Hopes that
@@ -42,15 +43,19 @@ public class HunterBot extends SplixPlayer {
             ImmutableList<Direction> possibleMoves = Lists.immutable.of(Direction.values())
                     .select(x -> {
                         Point2D pos = Utils.addPoints(x.vector, thisPos);
-                        return !global.get(pos).getClaimer().equals(getThisHidden()) && !board.getBounds().outOfBounds(pos);
+                        return !board.getBounds().outOfBounds(pos) && !getThisHidden().equals(global.get(pos).getClaimer());
                     });
-            return possibleMoves.size() != 0 ? possibleMoves.get(0) : Direction.East;
+            return possibleMoves.size() != 0 ? 
+                    possibleMoves.get(getRandom().nextInt(possibleMoves.size())) : Direction.East;
         }
 
         Point2D target = null;
         if (targets.size() == 0) target = lastTarget;
-        else targets.keysView().min(Comparator.comparingInt(t -> Utils.realMovementDist(thisPos, t)));
-        
+        else target = targets.keysView().min(Comparator.comparingInt(t -> Utils.realMovementDist(thisPos, t)));
+        if (target.equals(thisPos)) {
+            lastTarget = null;
+            return makeMove(game, board);
+        }
         Point2D dist = Utils.addPoints(Utils.multPoint(thisPos, -1), target);
         
         lastTarget = target;

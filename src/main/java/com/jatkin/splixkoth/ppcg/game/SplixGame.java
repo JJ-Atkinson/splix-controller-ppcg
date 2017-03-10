@@ -4,21 +4,15 @@ import com.jatkin.splixkoth.ppcg.SplixSettings;
 import com.jatkin.splixkoth.ppcg.game.readonly.ReadOnlyBoard;
 import com.jatkin.splixkoth.ppcg.game.readonly.ReadOnlyGame;
 import com.jatkin.splixkoth.ppcg.util.Utils;
-import com.nmerrill.kothcomm.game.games.AbstractGame;
 import com.nmerrill.kothcomm.game.games.IteratedGame;
 import com.nmerrill.kothcomm.game.maps.Point2D;
 import com.nmerrill.kothcomm.game.maps.graphmaps.bounds.point2D.SquareRegion;
-import com.nmerrill.kothcomm.game.players.Submission;
 import com.nmerrill.kothcomm.game.scoring.Scoreboard;
 import org.eclipse.collections.api.map.MutableMap;
 import org.eclipse.collections.api.set.MutableSet;
-import org.eclipse.collections.api.tuple.Pair;
-import org.eclipse.collections.api.tuple.Twin;
 import org.eclipse.collections.impl.factory.Maps;
 import org.eclipse.collections.impl.factory.Sets;
 import org.eclipse.collections.impl.tuple.Tuples;
-
-import java.util.Set;
 
 /**
  * Created by Jarrett on 01/31/17.
@@ -46,12 +40,12 @@ public class SplixGame extends IteratedGame<SplixPlayer> {
     public void setup() {
         super.setup();
         board = new SplixBoard(new SquareRegion(size));
-        board.initPlayers(getPlayerPositions());
+        board.initPlayers(getStartingPlayerPositions());
         scoreboard = new Scoreboard<>();
     }
     
     
-    public MutableMap<SplixPlayer, Point2D> getPlayerPositions() {
+    private MutableMap<SplixPlayer, Point2D> getStartingPlayerPositions() {
         MutableMap<SplixPlayer, Point2D> ret = Maps.mutable.empty();
         players.forEach(p -> 
             ret.put(p, new Point2D(random.nextInt(board.getBounds().getRight()-1), random.nextInt(board.getBounds().getTop() - 1)))
@@ -127,11 +121,12 @@ public class SplixGame extends IteratedGame<SplixPlayer> {
             return null;
         if (hasComputedScores)
             return scoreboard;
-        
+
         MutableSet<SplixPlayer> deadPlayers = 
-                players.toSet().difference(board.getPlayerPositions().keysView().toSet());
+                    players.toSet().difference(board.getPlayerPositions().keysView().toSet());
         deadPlayers.forEach(p -> scoreboard.setScore(getPlayerForType(p), 0));
-        
+
+
         players.select(p -> !deadPlayers.contains(p))
                .forEach(p -> scoreboard.addScore(p, board.countPointsOwnedByPlayer(p)));
         hasComputedScores = true;
@@ -140,6 +135,6 @@ public class SplixGame extends IteratedGame<SplixPlayer> {
 
     @Override
     public boolean finished() {
-        return super.finished() && board.getPlayerPositions().size() != 0;
+        return super.finished() || (board != null && board.getPlayerPositions().size() == 0);
     }
 }

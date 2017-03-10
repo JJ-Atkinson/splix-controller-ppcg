@@ -137,19 +137,23 @@ public class KotHCommMultiThread<T extends AbstractPlayer<T>, U extends Abstract
         printer.out.println("Running "+arguments.iterations+" games");
         
         Runnable gameRunnerTask = () -> {
-            while (numberOfGamesLeft.get() > 0) {
-                tournamentLock.lock();
-                U game;
-                try {
-                    game = runner.createGame();}
-                finally {tournamentLock.unlock();}
-                game.run();
-                printLock.lock();
-                try {printer.printProgress(arguments.iterations - numberOfGamesLeft.get(), arguments.iterations);}
-                finally {printLock.unlock();}
-                numberOfGamesLeft.decrementAndGet();
+            try {
+                while (numberOfGamesLeft.get() > 0) {
+                    tournamentLock.lock();
+                    U game;
+                    try {
+                        game = runner.createGame();}
+                    finally {tournamentLock.unlock();}
+                    game.run();
+                    printLock.lock();
+                    try {printer.printProgress(arguments.iterations - numberOfGamesLeft.get(), arguments.iterations);}
+                    finally {printLock.unlock();}
+                    numberOfGamesLeft.decrementAndGet();
+                }
+                finishedLock.release();
+            } catch (Exception e) {
+                e.printStackTrace();
             }
-            finishedLock.release();
         };
 
         for (int i = 0; i < threadCount; i++) {

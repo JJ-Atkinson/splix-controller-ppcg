@@ -11,12 +11,11 @@ import com.nmerrill.kothcomm.game.maps.Point2D;
 import com.nmerrill.kothcomm.game.players.Submission;
 import com.nmerrill.kothcomm.ui.gui.GameRunnerPane;
 import javafx.beans.binding.Bindings;
-import javafx.beans.binding.IntegerBinding;
 import javafx.beans.binding.NumberBinding;
-import javafx.beans.binding.ObjectBinding;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.fxml.FXML;
 import javafx.scene.canvas.Canvas;
+import javafx.scene.control.Alert;
 import javafx.scene.control.ComboBox;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
@@ -26,7 +25,6 @@ import org.eclipse.collections.api.set.MutableSet;
 import org.eclipse.collections.impl.factory.Maps;
 import org.eclipse.collections.impl.factory.Sets;
 
-import java.util.Random;
 import java.util.Set;
 
 public class UIController {
@@ -70,7 +68,8 @@ public class UIController {
 
     @FXML
     private ComboBox<SplixPlayer> playerChoiceComboBox;
-    
+    private GameRunnerPane gameRunnerControls;
+
     public void setGame(SplixGame game) {
         this.game = game;
         
@@ -87,13 +86,13 @@ public class UIController {
 
         globalGameViewerView = new GameViewer(globalViewCanvas, () -> game.getBoard(), SplixBoard::getBounds, playerColors);
         localGameViewerView = new GameViewer(localViewCanvas, () -> game.getBoard(), (board -> {
-            ensurePlayerFollowedNotDead();
+            boolean playersDead = ensurePlayerFollowedNotDead();
             Point2D playerPos = board.getPlayerPositions().get(playerFollowed);
-            return game.getReadOnlyBoardForPosition(playerPos).viewingArea;
+            return playersDead ? board.getBounds() : game.getReadOnlyBoardForPosition(playerPos).viewingArea;
         }), playerColors);
 
 
-        GameRunnerPane gameRunnerControls = new GameRunnerPane(game);
+        gameRunnerControls = new GameRunnerPane(game);
         gameStateContainer.getChildren().add(gameRunnerControls);
         gameRunnerControls.addGameNode(globalGameViewerView);
         gameRunnerControls.addGameNode(localGameViewerView);
@@ -126,12 +125,22 @@ public class UIController {
         turnsLeft.textProperty().bind(Bindings.convert(turnsLeftIntProp));
         gameRunnerControls.addGameNode(() -> turnsLeftIntProp.set(game.getRemainingIterations()));
     }
-
-    private void ensurePlayerFollowedNotDead() {
-        Set<SplixPlayer> alivePlayers = game.getPlayerPositions().keySet();
+    
+    private boolean ensurePlayerFollowedNotDead() {
+        Set<SplixPlayer> alivePlayers = game.getBoard().getPlayerPositions().keySet();
+        if (alivePlayers.isEmpty()) {
+            
+//            if (game.finished() == false)
+            Alert alert = new Alert(Alert.AlertType.INFORMATION);
+            alert.setContentText("All players dead. Game now finished.");
+            alert.show();
+            return true;
+        }
+        
         if (!alivePlayers.contains(playerFollowed)) {
             playerFollowed = alivePlayers.iterator().next();
         }
+        return false;
     }
 
 }
