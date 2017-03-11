@@ -122,8 +122,11 @@ public class SplixGame extends IteratedGame<SplixPlayer> {
         if (hasComputedScores)
             return scoreboard;
 
+        MutableSet<SplixPlayer> playerSet = players.toSet();
+        MutableMap<SplixPlayer, Point2D> playerPositions = board.getPlayerPositions();
+        MutableSet<SplixPlayer> livePlayers = playerPositions.keysView().toSet();
         MutableSet<SplixPlayer> deadPlayers = 
-                    players.toSet().difference(board.getPlayerPositions().keysView().toSet());
+                    playerSet.difference(livePlayers);
         deadPlayers.forEach(p -> scoreboard.setScore(getPlayerForType(p), 0));
 
 

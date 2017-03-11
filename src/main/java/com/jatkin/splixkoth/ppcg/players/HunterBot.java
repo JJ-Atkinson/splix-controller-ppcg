@@ -8,18 +8,11 @@ import com.jatkin.splixkoth.ppcg.game.readonly.ReadOnlyGame;
 import com.jatkin.splixkoth.ppcg.game.readonly.ReadOnlySplixPoint;
 import com.jatkin.splixkoth.ppcg.util.Utils;
 import com.nmerrill.kothcomm.game.maps.Point2D;
-import com.nmerrill.kothcomm.game.maps.graphmaps.bounds.point2D.SquareRegion;
-import javafx.util.Pair;
-import org.eclipse.collections.api.bag.MutableBag;
-import org.eclipse.collections.api.list.ImmutableList;
 import org.eclipse.collections.api.map.MutableMap;
 import org.eclipse.collections.api.set.ImmutableSet;
-import org.eclipse.collections.impl.factory.Lists;
 import org.eclipse.collections.impl.factory.Sets;
 
-import javax.rmi.CORBA.Util;
 import java.util.Comparator;
-import java.util.Random;
 
 /**
  * Trap bot goes to the wall and traces the entirety around. Hopes that
@@ -31,6 +24,8 @@ public class HunterBot extends SplixPlayer {
 
     private Point2D lastTarget;
     
+    private Direction lastMove = Direction.East;
+    
     @Override
     protected Direction makeMove(ReadOnlyGame game, ReadOnlyBoard board) {
         Point2D thisPos = board.getPosition(this);
@@ -40,13 +35,8 @@ public class HunterBot extends SplixPlayer {
                         && !rosp.getClaimer().equals(new HiddenPlayer(null)));
         
         if (targets.size() == 0 && lastTarget == null) {
-            ImmutableList<Direction> possibleMoves = Lists.immutable.of(Direction.values())
-                    .select(x -> {
-                        Point2D pos = Utils.addPoints(x.vector, thisPos);
-                        return !board.getBounds().outOfBounds(pos) && !getThisHidden().equals(global.get(pos).getClaimer());
-                    });
-            return possibleMoves.size() != 0 ? 
-                    possibleMoves.get(getRandom().nextInt(possibleMoves.size())) : Direction.East;
+            lastMove = lastMove.leftTurn();
+            return lastMove;
         }
 
         Point2D target = null;
@@ -54,15 +44,32 @@ public class HunterBot extends SplixPlayer {
         else target = targets.keysView().min(Comparator.comparingInt(t -> Utils.realMovementDist(thisPos, t)));
         if (target.equals(thisPos)) {
             lastTarget = null;
-            return makeMove(game, board);
+            // time to go home
+            target = global.select((z_, x) -> getThisHidden().equals(x.getOwner())).keySet().iterator().next();
         }
-        Point2D dist = Utils.addPoints(Utils.multPoint(thisPos, -1), target);
         
         lastTarget = target;
+        lastMove = makeSafeMove(target, global, board, thisPos);
+        return lastMove;
+    }
+    
+    private Direction makeSafeMove(Point2D targetLocation, MutableMap<Point2D, ReadOnlySplixPoint> map, ReadOnlyBoard board, Point2D currLoc) {
+        Point2D dist = Utils.addPoints(Utils.multPoint(currLoc, -1), targetLocation);
+        ImmutableSet<Direction> possibleMoves = Sets.immutable.of(Direction.values())
+                .select(x -> {
+                    Point2D pos = Utils.addPoints(x.vector, currLoc);
+                    return !board.getBounds().outOfBounds(pos) && !getThisHidden().equals(map.get(pos).getClaimer());
+                });
+        Direction prefMove;
         if (Math.abs(dist.getX()) > Math.abs(dist.getY()))
-            return getDirectionFroPoint(new Point2D(normalizeNum(dist.getX()), 0));
+            prefMove = getDirectionFroPoint(new Point2D(normalizeNum(dist.getX()), 0));
         else
-            return getDirectionFroPoint(new Point2D(0, normalizeNum(dist.getY())));
+            prefMove = getDirectionFroPoint(new Point2D(0, normalizeNum(dist.getY())));
+        
+        if (possibleMoves.contains(prefMove)) return prefMove;
+        if (possibleMoves.contains(prefMove.leftTurn())) return prefMove.leftTurn();
+        if (possibleMoves.contains(prefMove.rightTurn())) return prefMove.rightTurn();
+        return prefMove.leftTurn().leftTurn();
     }
 
     private Direction getDirectionFroPoint(Point2D dir) {

@@ -126,6 +126,7 @@ public class UIController {
         gameRunnerControls.addGameNode(() -> turnsLeftIntProp.set(game.getRemainingIterations()));
     }
     
+    private boolean hasAlertedUser = false;
     private boolean ensurePlayerFollowedNotDead() {
         Set<SplixPlayer> alivePlayers = game.getBoard().getPlayerPositions().keySet();
         if (alivePlayers.isEmpty()) {
@@ -133,7 +134,12 @@ public class UIController {
 //            if (game.finished() == false)
             Alert alert = new Alert(Alert.AlertType.INFORMATION);
             alert.setContentText("All players dead. Game now finished.");
-            alert.show();
+            if (!hasAlertedUser)
+                alert.show();
+            hasAlertedUser = true;
+            
+            gameRunnerControls.removeGameNode(globalGameViewerView);
+            gameRunnerControls.removeGameNode(localGameViewerView);
             return true;
         }
         

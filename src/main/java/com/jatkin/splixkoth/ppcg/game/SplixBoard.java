@@ -157,9 +157,10 @@ public class SplixBoard extends NeighborhoodGraphMap<Point2D, SplixPoint> {
     
     /**
      * Looks at the land owned by a player and identifies empty spaces that
-     * need to be filled. Incredibly inefficient, so use sparingly.
+     * need to be filled. Very inefficient, so use sparingly.
      *
      * @param whoToCheck
+     * @param areaChanged the points on the board that have changed and need examination.
      */
     public void fillPlayerCapturedArea(SplixPlayer whoToCheck, Set<Point2D> areaChanged) {
         MutableSet<Point2D> previouslyVisitedLocations = Sets.mutable.empty();
@@ -211,27 +212,40 @@ public class SplixBoard extends NeighborhoodGraphMap<Point2D, SplixPoint> {
      */
     private Set<Point2D>  floodSearchHelperFillPlayerCapturedArea(Point2D start, SplixPlayer boundary, MutableSet<Point2D> previouslyVisitedLocations) {
         Set<Point2D> ret = new HashSet<>();
+        
+        // if we intersect a player position, excluding the boundary player, we cannot fill and
+        // can immediately assume that the whole area is invalid
         MutableSet<Point2D> invalidFillPositions = playerPositions.valuesView().toSet();
         invalidFillPositions.remove(playerPositions.get(boundary));
+        
         ArrayDeque<Point2D> nodesToExamine = new ArrayDeque<>();
         nodesToExamine.add(start);
         ret.add(start);
+        
         while (!nodesToExamine.isEmpty()) {
             Point2D node = nodesToExamine.pop();
 
+            // up left right down
             int[][] dirs = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
             for (int[] dir : dirs) {
                 Point2D ptToCheck = new Point2D(node.getX() + dir[0], node.getY() + dir[1]);
                 boolean intersectsOldSpace = previouslyVisitedLocations.contains(ptToCheck);
 
+                // if we intersect the old space, then we cannot fill there and must move on
+                // if ret contains ptToCheck, then it would be inefficient to go back
+                // and we cannot go onto a location owned by the boundary
                 if (!intersectsOldSpace && !ret.contains(ptToCheck) && inBounds(ptToCheck) && get(ptToCheck).getOwner() != boundary) {
+                    
                     if (borderPoints.contains(ptToCheck)
                              || invalidFillPositions.contains(ptToCheck)) {
                             // if we can reach the boarder or another knownInvalidLocation, we have nothing else to do.
                         return null;
                     }
+                    // we know it's good, so we add it to the ret
                     ret.add(ptToCheck);
+                    // add it to the cache of invalid locations
                     previouslyVisitedLocations.add(ptToCheck);
+                    // push it to nodes to examine so we can check it's adjacency
                     nodesToExamine.push(ptToCheck);
                 }
                 
@@ -357,15 +371,6 @@ public class SplixBoard extends NeighborhoodGraphMap<Point2D, SplixPoint> {
     }
 
     public SquareRegion getBounds() {return selfBounds;}
-
-    public boolean putSafe(Point2D point, SplixPoint item) {
-        try {
-            super.put(point, item);
-            return true;
-        } catch (Exception e) {
-            return false;
-        }
-    }
 
     @Override
     public boolean inBounds(Point2D point) {

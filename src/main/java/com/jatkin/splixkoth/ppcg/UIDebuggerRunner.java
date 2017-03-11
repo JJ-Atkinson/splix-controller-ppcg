@@ -34,7 +34,7 @@ public class UIDebuggerRunner extends Application {
     @Override
     public void start(Stage primaryStage) throws Exception {
         
-        primaryStage.setTitle("FXML TableView Example");
+        primaryStage.setTitle("Splix KotHComm Bot visualizer");
 
         TournamentPane<SplixPlayer, SplixGame> pane = new TournamentPane<SplixPlayer, SplixGame>(getTournament(), this::getNewGame);
         
@@ -42,6 +42,8 @@ public class UIDebuggerRunner extends Application {
         Scene myScene = new Scene(pane);
         
         primaryStage.setScene(myScene);
+        primaryStage.setMinHeight(600);
+        primaryStage.setMinWidth(800);
         primaryStage.show();
 
     }
