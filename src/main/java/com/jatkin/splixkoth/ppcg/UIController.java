@@ -10,6 +10,7 @@ import com.jatkin.splixkoth.ppcg.players.TrapBot;
 import com.nmerrill.kothcomm.game.maps.Point2D;
 import com.nmerrill.kothcomm.game.players.Submission;
 import com.nmerrill.kothcomm.ui.gui.GameRunnerPane;
+import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.NumberBinding;
 import javafx.beans.property.SimpleIntegerProperty;
@@ -44,7 +45,7 @@ public class UIController {
             Color.web("#2ACC38"),// green
             Color.web("#d2b732"),// yellow
             Color.web("#d06c18"),// yellow
-            Color.web("#531880")// purple
+            Color.web("#632890")// purple
     );
     
     private GameViewer localGameViewerView;
@@ -114,8 +115,7 @@ public class UIController {
             root.prefWidthProperty().bind(((Pane)root.getParent()).widthProperty());
             root.prefHeightProperty().bind(((Pane)root.getParent()).heightProperty());
         });
-
-
+        
         playerChoiceComboBox.getItems().addAll(players);
         playerChoiceComboBox.valueProperty().addListener((b, o, newValue) ->
             {playerFollowed = newValue; localGameViewerView.draw();});
@@ -123,7 +123,7 @@ public class UIController {
 
         SimpleIntegerProperty turnsLeftIntProp = new SimpleIntegerProperty(game.getRemainingIterations());
         turnsLeft.textProperty().bind(Bindings.convert(turnsLeftIntProp));
-        gameRunnerControls.addGameNode(() -> turnsLeftIntProp.set(game.getRemainingIterations()));
+        gameRunnerControls.addGameNode(() -> Platform.runLater(() -> turnsLeftIntProp.set(game.getRemainingIterations())));
     }
     
     private boolean hasAlertedUser = false;

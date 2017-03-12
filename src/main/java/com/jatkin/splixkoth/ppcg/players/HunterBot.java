@@ -15,12 +15,11 @@ import org.eclipse.collections.impl.factory.Sets;
 import java.util.Comparator;
 
 /**
- * Trap bot goes to the wall and traces the entirety around. Hopes that
- * the players in the middle die and that nobody challenges him. Nearly 
- * all turns are left turns.
+ * This bot looks for any trail points left behind by another player and sets that as his target. If the target ever
+ * disappears, it will continue on in hopes that the player will return soon, or if another target appears, it will
+ * go towards that one. Works best when the other player repeatedly goes in the same general direction.
  */
 public class HunterBot extends SplixPlayer {
-
 
     private Point2D lastTarget;
     
@@ -44,8 +43,13 @@ public class HunterBot extends SplixPlayer {
         else target = targets.keysView().min(Comparator.comparingInt(t -> Utils.realMovementDist(thisPos, t)));
         if (target.equals(thisPos)) {
             lastTarget = null;
+            if (global.get(thisPos).getOwner().equals(getThisHidden())) {
+                lastMove = lastMove.leftTurn();
+                return lastMove;
+            } else 
             // time to go home
             target = global.select((z_, x) -> getThisHidden().equals(x.getOwner())).keySet().iterator().next();
+            
         }
         
         lastTarget = target;
@@ -77,7 +81,6 @@ public class HunterBot extends SplixPlayer {
     }
 
     private int normalizeNum(int n) { if (n < -1) return -1; if (n > 1) return 1; else return n;}
-    
     
     @Override
     public boolean equals(Object o) {
