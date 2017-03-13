@@ -291,7 +291,9 @@ public class SplixBoard extends NeighborhoodGraphMap<Point2D, SplixPoint> {
 
         MutableList<SplixPlayer> players = playerPositions.keysView().toList();
         players.forEach(player -> newPlayerPositions.put(player,
-                        playerPositions.get(player).move(playerMoves.get(player).vector.getX(), playerMoves.get(player).vector.getY())));
+                        playerPositions.get(player).move(
+                                playerMoves.get(player).vector.getX(),
+                                playerMoves.get(player).vector.getY())));
         
         players.forEach(p -> {
             if (outOfBounds(newPlayerPositions.get(p)))
@@ -358,7 +360,8 @@ public class SplixBoard extends NeighborhoodGraphMap<Point2D, SplixPoint> {
 
         MutableList<SplixPlayer> players = playerPositions.keysView().toList();
         players.forEach(player -> newPlayerPositions.put(player,
-                playerPositions.get(player).move(playerMoves.get(player).vector.getX(), playerMoves.get(player).vector.getX())));
+                playerPositions.get(player).move(playerMoves.get(player).vector.getX(), playerMoves.get(player).vector.getY())));
+
 
         newPlayerPositions.forEach((player, nPos) -> {
             Point2D oPos = playerPositions.get(player);
