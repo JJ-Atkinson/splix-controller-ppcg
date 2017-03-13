@@ -1,18 +1,14 @@
 package com.jatkin.splixkoth.ppcg.game.readonly;
 
-import com.jatkin.splixkoth.ppcg.SplixSettings;
 import com.jatkin.splixkoth.ppcg.game.SplixBoard;
 import com.jatkin.splixkoth.ppcg.game.SplixPlayer;
 import com.jatkin.splixkoth.ppcg.game.SplixPoint;
-import com.jatkin.splixkoth.ppcg.util.Utils;
 import com.nmerrill.kothcomm.game.maps.Point2D;
 import com.nmerrill.kothcomm.game.maps.graphmaps.bounds.point2D.SquareRegion;
-import com.nmerrill.kothcomm.game.players.Submission;
 import org.eclipse.collections.api.map.MutableMap;
 import org.eclipse.collections.impl.factory.Maps;
 
 import java.util.Map;
-import java.util.Set;
 
 /**
  * Created by Jarrett on 02/02/17.
