@@ -3,7 +3,6 @@ package com.jatkin.splixkoth.ppcg.game;
 import com.jatkin.splixkoth.ppcg.SplixSettings;
 import com.jatkin.splixkoth.ppcg.game.readonly.ReadOnlyBoard;
 import com.jatkin.splixkoth.ppcg.game.readonly.ReadOnlyGame;
-import com.jatkin.splixkoth.ppcg.util.Utils;
 import com.nmerrill.kothcomm.game.games.IteratedGame;
 import com.nmerrill.kothcomm.game.maps.Point2D;
 import com.nmerrill.kothcomm.game.maps.graphmaps.bounds.point2D.SquareRegion;
@@ -93,10 +92,10 @@ public class SplixGame extends IteratedGame<SplixPlayer> {
 
     public ReadOnlyBoard getReadOnlyBoardForPosition(Point2D pos) {
         SquareRegion area = new SquareRegion(
-                Utils.addPoints(pos, new Point2D(-SplixSettings.viewingAreaSize.getX()/2,
-                        -SplixSettings.viewingAreaSize.getY()/2)),
-                Utils.addPoints(pos, new Point2D(SplixSettings.viewingAreaSize.getX()/2,
-                        SplixSettings.viewingAreaSize.getY()/2))
+                pos.move(-SplixSettings.viewingAreaSize.getX()/2,
+                         -SplixSettings.viewingAreaSize.getY()/2),
+                pos.move(SplixSettings.viewingAreaSize.getX()/2,
+                         SplixSettings.viewingAreaSize.getY()/2)
         );
 //        SquareRegion bounds = board.getBounds();
 //

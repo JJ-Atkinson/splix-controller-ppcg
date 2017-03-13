@@ -5,7 +5,6 @@ import com.jatkin.splixkoth.ppcg.game.SplixPlayer;
 import com.jatkin.splixkoth.ppcg.game.readonly.ReadOnlyBoard;
 import com.jatkin.splixkoth.ppcg.game.readonly.ReadOnlyGame;
 import com.jatkin.splixkoth.ppcg.game.readonly.ReadOnlySplixPoint;
-import com.jatkin.splixkoth.ppcg.util.Utils;
 import com.nmerrill.kothcomm.game.maps.Point2D;
 import com.nmerrill.kothcomm.game.maps.graphmaps.bounds.point2D.SquareRegion;
 import javafx.util.Pair;
@@ -39,7 +38,6 @@ public class TrapBot extends SplixPlayer {
     public static int WALL_WEST = 3;
     public static int WALL_SOUTH = 4;
     
-    private int currentWall = 0;
 
     /**
      * How long the bot would like to go before he turns around to go back home.
@@ -129,9 +127,7 @@ public class TrapBot extends SplixPlayer {
      */
     int getDistCanTravel(Point2D currPos, SquareRegion bounds, Direction direction) {
         for (int i = 1; i <= PREFERRED_LINE_DIST; i++) {
-            if (!bounds.inBounds(
-                    Utils.addPoints(currPos,
-                            Utils.multPoint(direction.vector, i))))
+            if (!bounds.inBounds(currPos.move(direction.vector.getX()*i, direction.vector.getY()*i)))
                 return i-1;
         }
         return PREFERRED_LINE_DIST;

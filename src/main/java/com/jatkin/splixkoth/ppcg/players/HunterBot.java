@@ -6,7 +6,6 @@ import com.jatkin.splixkoth.ppcg.game.readonly.HiddenPlayer;
 import com.jatkin.splixkoth.ppcg.game.readonly.ReadOnlyBoard;
 import com.jatkin.splixkoth.ppcg.game.readonly.ReadOnlyGame;
 import com.jatkin.splixkoth.ppcg.game.readonly.ReadOnlySplixPoint;
-import com.jatkin.splixkoth.ppcg.util.Utils;
 import com.nmerrill.kothcomm.game.maps.Point2D;
 import org.eclipse.collections.api.map.MutableMap;
 import org.eclipse.collections.api.set.ImmutableSet;
@@ -40,7 +39,7 @@ public class HunterBot extends SplixPlayer {
 
         Point2D target = null;
         if (targets.size() == 0) target = lastTarget;
-        else target = targets.keysView().min(Comparator.comparingInt(t -> Utils.realMovementDist(thisPos, t)));
+        else target = targets.keysView().min(Comparator.comparingInt(thisPos::cartesianDistance));
         if (target.equals(thisPos)) {
             lastTarget = null;
             if (global.get(thisPos).getOwner().equals(getThisHidden())) {
@@ -58,10 +57,10 @@ public class HunterBot extends SplixPlayer {
     }
     
     private Direction makeSafeMove(Point2D targetLocation, MutableMap<Point2D, ReadOnlySplixPoint> map, ReadOnlyBoard board, Point2D currLoc) {
-        Point2D dist = Utils.addPoints(Utils.multPoint(currLoc, -1), targetLocation);
+        Point2D dist = targetLocation.move(-currLoc.getX(), -currLoc.getY());
         ImmutableSet<Direction> possibleMoves = Sets.immutable.of(Direction.values())
                 .select(x -> {
-                    Point2D pos = Utils.addPoints(x.vector, currLoc);
+                    Point2D pos = currLoc.move(x.vector.getX(), x.vector.getY());
                     return !board.getBounds().outOfBounds(pos) && !getThisHidden().equals(map.get(pos).getClaimer());
                 });
         Direction prefMove;

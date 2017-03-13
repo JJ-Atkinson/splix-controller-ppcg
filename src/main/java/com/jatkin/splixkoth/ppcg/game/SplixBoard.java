@@ -1,6 +1,5 @@
 package com.jatkin.splixkoth.ppcg.game;
 
-import com.jatkin.splixkoth.ppcg.util.Utils;
 import com.nmerrill.kothcomm.game.maps.Point2D;
 import com.nmerrill.kothcomm.game.maps.graphmaps.NeighborhoodGraphMap;
 import com.nmerrill.kothcomm.game.maps.graphmaps.bounds.point2D.SquareRegion;
@@ -85,7 +84,7 @@ public class SplixBoard extends NeighborhoodGraphMap<Point2D, SplixPoint> {
             Point2D position = playerPositions_.get(player);
             for (int x = -2; x <= 2; x++) {
                 for (int y = -2; y <= 2; y++) {
-                    Point2D pointOfBase = Utils.addPoints(new Point2D(x, y), position);
+                    Point2D pointOfBase = position.move(x, y);
                     if (!outOfBounds(pointOfBase))
                         get(pointOfBase).setOwner(player);
                 }
@@ -292,7 +291,7 @@ public class SplixBoard extends NeighborhoodGraphMap<Point2D, SplixPoint> {
 
         MutableList<SplixPlayer> players = playerPositions.keysView().toList();
         players.forEach(player -> newPlayerPositions.put(player,
-                        Utils.addPoints(playerPositions.get(player), playerMoves.get(player).vector)));
+                        playerPositions.get(player).move(playerMoves.get(player).vector.getX(), playerMoves.get(player).vector.getY())));
         
         players.forEach(p -> {
             if (outOfBounds(newPlayerPositions.get(p)))
@@ -329,7 +328,7 @@ public class SplixBoard extends NeighborhoodGraphMap<Point2D, SplixPoint> {
                 Point2D currPlayerN = newPlayerPositions.get(currentPlayer);
                 Point2D otherPlayerN = newPlayerPositions.get(otherPlayer);
 
-                if (Utils.realMovementDist(currPlayerO, otherPlayerO) < 3) {// they actually have a chance at colliding
+                if (currPlayerO.cartesianDistance(otherPlayerO) < 3) {// they actually have a chance at colliding
                     if (currPlayerN.equals(otherPlayerN)) {// normal head butt, both should die
                         if (playersThatCanDie.contains(currentPlayer))
                             deadPlayers.put(currentPlayer, otherPlayer);
@@ -359,7 +358,7 @@ public class SplixBoard extends NeighborhoodGraphMap<Point2D, SplixPoint> {
 
         MutableList<SplixPlayer> players = playerPositions.keysView().toList();
         players.forEach(player -> newPlayerPositions.put(player,
-                Utils.addPoints(playerPositions.get(player), playerMoves.get(player).vector)));
+                playerPositions.get(player).move(playerMoves.get(player).vector.getX(), playerMoves.get(player).vector.getX())));
 
         newPlayerPositions.forEach((player, nPos) -> {
             Point2D oPos = playerPositions.get(player);
