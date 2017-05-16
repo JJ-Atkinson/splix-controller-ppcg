@@ -26,7 +26,7 @@ public class HunterBot extends SplixPlayer {
     
     @Override
     protected Direction makeMove(ReadOnlyGame game, ReadOnlyBoard board) {
-        Point2D thisPos = board.getPosition(this);
+        Point2D thisPos = getSelfPosition(board);
         MutableMap<Point2D, ReadOnlySplixPoint> global = board.getGlobal();
         MutableMap<Point2D, ReadOnlySplixPoint> targets = global.select((pt, rosp) ->
                 !rosp.getClaimer().equals(getThisHidden()) 

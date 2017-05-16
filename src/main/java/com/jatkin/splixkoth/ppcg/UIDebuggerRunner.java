@@ -1,4 +1,6 @@
-package com.jatkin.splixkoth.ppcg;/**
+package com.jatkin.splixkoth.ppcg;
+
+/**
  * Created by Jarrett on 02/16/17.
  */
 

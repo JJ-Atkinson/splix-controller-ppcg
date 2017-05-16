@@ -67,7 +67,7 @@ public class TrapBot extends SplixPlayer {
             
             if (mode == MODE_GOING_TO_WALL && ret == null) {
                 int distCanTravel = getDistCanTravel(
-                        board.getPosition(this), board.getBounds(), directionToWall);
+                        getSelfPosition(board), board.getBounds(), directionToWall);
                 if (distCanTravel == 0) mode = MODE_FOLLOWING_WALL;
                 else ret = directionToWall;
                 distToTravel = distCanTravel;
@@ -80,7 +80,7 @@ public class TrapBot extends SplixPlayer {
                 while (distCanTravel == 0) {// keep turning left until we can get somewhere
                     ret = ret.leftTurn();
                     distCanTravel = getDistCanTravel(
-                            board.getPosition(this), board.getBounds(), ret);
+                            getSelfPosition(board), board.getBounds(), ret);
                 }
                 
                 distToTravel = distCanTravel;
@@ -100,23 +100,24 @@ public class TrapBot extends SplixPlayer {
     }
 
     int getClosestWall(ReadOnlyBoard board) {
+        Point2D thisPos = getSelfPosition(board);
         return Lists.mutable.of(
-                new Pair<>(WALL_NORTH, board.getBounds().getTop() - board.getPosition(this).getY()),
-                new Pair<>(WALL_SOUTH, board.getPosition(this).getY()), 
-                new Pair<>(WALL_EAST, board.getBounds().getRight() - board.getPosition(this).getX()),
-                new Pair<>(WALL_WEST, board.getPosition(this).getX())
+                new Pair<>(WALL_NORTH, board.getBounds().getTop() - thisPos.getY()),
+                new Pair<>(WALL_SOUTH, thisPos.getY()), 
+                new Pair<>(WALL_EAST, board.getBounds().getRight() - thisPos.getX()),
+                new Pair<>(WALL_WEST, thisPos.getX())
         ).min(Comparator.comparingInt(Pair::getValue)).getKey();
     }
 
     /**
-     * This goes around some intended behavior to get the correct result. When a player goes outside his territory
-     * the land under him is converted to a trail - on the next step of the game. So a trail length may be the count
-     * of the trail locations plus one. That is what this function calculates. Depends on the whole trail being 
-     * contained inside the view.
+     * This goes around some intended behavior in the controller to get the correct result. When a player goes outside
+     * his territory the land under him is converted to a trail -- on the next step of the game. So a trail length may
+     * be the count of the trail locations plus one. That is what this function calculates. Depends on the whole trail
+     * being contained inside the view passed to it.
      * @return
      */
     int getTrailLength(ReadOnlyBoard board, MutableMap<Point2D, ReadOnlySplixPoint> view) {
-        boolean isPlayerOutsideHome = !view.get(board.getPosition(this)).getOwner().equals(getThisHidden());
+        boolean isPlayerOutsideHome = !view.get(getSelfPosition(board)).getOwner().equals(getThisHidden());
         int trailLength = view.count(rop -> rop.getClaimer().equals(getThisHidden()));
         return trailLength + (isPlayerOutsideHome? 1 : 0);
     }
