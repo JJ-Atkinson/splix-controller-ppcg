@@ -23,7 +23,7 @@ public class HiddenPlayer {
              || (that.backing != null && backing == null))
             return false;
         
-                        // vvv both could be null, or this could speed it up.
+                        // vvv both could be null
         return that.backing == backing || backing.equals(that.backing);
     }
 

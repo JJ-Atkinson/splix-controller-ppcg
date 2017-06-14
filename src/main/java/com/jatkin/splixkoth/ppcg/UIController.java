@@ -31,7 +31,7 @@ import java.util.Set;
 public class UIController {
     SplixGame game;
     
-    MutableSet<Submission<SplixPlayer>> players = 
+    public static MutableSet<Submission<SplixPlayer>> players = 
             Sets.mutable.of(
                     new Submission<>("TrapBot 1.0", TrapBot::new),
                     new Submission<>("TrapBot 1.1", TrapBot::new)
