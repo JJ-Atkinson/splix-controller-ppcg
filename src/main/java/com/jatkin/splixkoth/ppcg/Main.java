@@ -3,46 +3,33 @@ package com.jatkin.splixkoth.ppcg;
 import com.jatkin.splixkoth.ppcg.game.KotHCommMultiThread;
 import com.jatkin.splixkoth.ppcg.game.SplixGame;
 import com.jatkin.splixkoth.ppcg.game.SplixPlayer;
-import com.jatkin.splixkoth.ppcg.players.HunterBot;
-import com.jatkin.splixkoth.ppcg.players.TrapBot;
 import com.nmerrill.kothcomm.communication.Arguments;
-import com.nmerrill.kothcomm.game.KotHComm;
+import com.nmerrill.kothcomm.communication.languages.java.JavaLoader;
 import javafx.application.Application;
-
-import java.util.Random;
-import java.util.function.Supplier;
 
 /**
  * Created by Jarrett on 01/31/17.
- */ 
+ */
 public class Main {
     public static void main(String[] args) {
         SplixArguments arguments = new SplixArguments();
-        Arguments.parse(args, arguments);
+        arguments = Arguments.parse(args, arguments);
 
-        Application.launch();
-        
-        runGames(arguments, 
-                args,
-                new String[]{"TrapBot 1.0", "HunterBot 1.0"},
-                new Supplier[] {TrapBot::new, HunterBot::new});
+        if (arguments.useGui)
+            Application.launch(UIDebuggerRunner.class, args);
+        else
+            runGames(arguments, args);
     }
-    
+
 
     /**
-     * 
      * @param args
      */
-    static void runGames(SplixArguments args, String[] appargs, String[] botNames, Supplier<SplixPlayer>[] botConstructors) {
-        args.iterations = 1000;
+    static void runGames(SplixArguments args, String[] appargs) {
         long now = System.currentTimeMillis();
-        KotHCommMultiThread<SplixPlayer, SplixGame> runner = new KotHCommMultiThread<>(() -> new SplixGame(200));
-        runner.setThreadCount(8);
+        KotHCommMultiThread<SplixPlayer, SplixGame> runner = new KotHCommMultiThread<>(() -> new SplixGame(SplixSettings.boardDims));
 
-        for (int i = 0; i < botNames.length; i++) {
-            runner.addSubmission(botNames[i], botConstructors[i]);
-        }
-        
+        runner.addLanguage(new JavaLoader<>(SplixPlayer.class));
         runner.setGameSize(2);
         runner.setArgumentParser(args);
         runner.run(appargs);

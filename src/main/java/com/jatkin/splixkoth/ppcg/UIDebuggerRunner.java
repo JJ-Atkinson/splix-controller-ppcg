@@ -4,8 +4,11 @@ package com.jatkin.splixkoth.ppcg;
  * Created by Jarrett on 02/16/17.
  */
 
+import com.jatkin.splixkoth.ppcg.game.KotHCommMultiThread;
 import com.jatkin.splixkoth.ppcg.game.SplixGame;
 import com.jatkin.splixkoth.ppcg.game.SplixPlayer;
+import com.nmerrill.kothcomm.communication.Arguments;
+import com.nmerrill.kothcomm.communication.languages.java.JavaLoader;
 import com.nmerrill.kothcomm.game.TournamentRunner;
 import com.nmerrill.kothcomm.game.games.AbstractGame;
 import com.nmerrill.kothcomm.game.players.AbstractPlayer;
@@ -24,10 +27,13 @@ import org.eclipse.collections.impl.factory.Lists;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.Arrays;
 import java.util.Random;
 
 
 public class UIDebuggerRunner extends Application {
+    
+    public static SplixArguments arguments;
 
     public static void main(String[] args) {
         launch(args);
@@ -35,10 +41,14 @@ public class UIDebuggerRunner extends Application {
 
     @Override
     public void start(Stage primaryStage) throws Exception {
+        Object[] argsRaw = getParameters().getRaw().toArray();// really stupid hack, should just be able to cast...
+        String[] args = Arrays.copyOf(argsRaw, argsRaw.length, String[].class);
+        arguments = Arguments.parse(args, new SplixArguments());
+        
         
         primaryStage.setTitle("Splix KotHComm Bot visualizer");
 
-        TournamentPane<SplixPlayer, SplixGame> pane = new TournamentPane<SplixPlayer, SplixGame>(getTournament(), this::getNewGame);
+        TournamentPane<SplixPlayer, SplixGame> pane = new TournamentPane<>(getTournament(), this::getNewGame);
         
 
         Scene myScene = new Scene(pane);
@@ -52,14 +62,17 @@ public class UIDebuggerRunner extends Application {
 
 
     private TournamentRunner<SplixPlayer, SplixGame> getTournament() {
-        int seed = new Random().nextInt();
+        Random random = arguments.getRandom();
 
         return new TournamentRunner<SplixPlayer, SplixGame>(
-                new Sampling(SplixSettings.players, new Random(seed)),
+                new Sampling(
+                        KotHCommMultiThread.loadPlayers(true,
+                        arguments,
+                        Lists.mutable.of(new JavaLoader(SplixPlayer.class))), random),
                 new ItemAggregator<>(),
                 SplixSettings.playersPerGame,
-                () -> new SplixGame(80), 
-                new Random(seed));
+                () -> new SplixGame(SplixSettings.boardDims), 
+                random);
     }
 
     private Pane getNewGame(SplixGame game) {

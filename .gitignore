@@ -21,3 +21,4 @@ build/
 gradle/
 out/
 /src/KotHComm-1.0.1-sources.zip
+/ignored_debugging_code/

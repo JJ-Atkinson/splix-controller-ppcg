@@ -1,6 +1,6 @@
 package com.jatkin.splixkoth.ppcg.game
 
-import com.jatkin.splixkoth.ppcg.players.TrapBot
+import com.jatkin.splixkoth.ppcg.bots.java.TrapBot
 import com.nmerrill.kothcomm.game.maps.Point2D
 import com.nmerrill.kothcomm.game.maps.graphmaps.bounds.point2D.SquareRegion
 import org.eclipse.collections.api.map.MutableMap

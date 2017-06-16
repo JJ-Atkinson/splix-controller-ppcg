@@ -7,9 +7,14 @@
  * user guide available at https://docs.gradle.org/3.0/userguide/tutorial_java_projects.html
  */
 
+
+
 // Apply the java plugin to add support for Java
-apply plugin: 'java'
-apply plugin: 'groovy'
+
+plugins {
+    id 'com.github.johnrengelman.shadow' version '2.0.0'
+    id 'groovy'
+}
 
 
 // In this section you declare where to find the dependencies of your project
@@ -43,5 +48,11 @@ test {
     // listen to events in the test execution lifecycle
     beforeTest { descriptor ->
         logger.lifecycle("Running test: " + descriptor)
+    }
+}
+
+jar {
+    manifest {
+        attributes 'Main-Class': 'com.jatkin.splixkoth.ppcg.Main'
     }
 }

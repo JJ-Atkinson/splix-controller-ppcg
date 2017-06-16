@@ -6,7 +6,6 @@ package com.jatkin.splixkoth.ppcg;
 import com.jatkin.splixkoth.ppcg.game.SplixBoard;
 import com.jatkin.splixkoth.ppcg.game.SplixGame;
 import com.jatkin.splixkoth.ppcg.game.SplixPlayer;
-import com.jatkin.splixkoth.ppcg.players.TrapBot;
 import com.nmerrill.kothcomm.game.maps.Point2D;
 import com.nmerrill.kothcomm.game.players.Submission;
 import com.nmerrill.kothcomm.ui.gui.GameRunnerPane;
@@ -30,14 +29,6 @@ import java.util.Set;
 
 public class UIController {
     SplixGame game;
-    
-    public static MutableSet<Submission<SplixPlayer>> players = 
-            Sets.mutable.of(
-                    new Submission<>("TrapBot 1.0", TrapBot::new),
-                    new Submission<>("TrapBot 1.1", TrapBot::new)
-            );
-    
-
     
     MutableSet<Color> colors = Sets.mutable.of(
             Color.web("#a22929"),// red

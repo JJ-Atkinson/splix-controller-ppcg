@@ -1,5 +1,6 @@
 package com.jatkin.splixkoth.ppcg.game;
 
+import com.jatkin.splixkoth.ppcg.SplixArguments;
 import com.nmerrill.kothcomm.communication.Arguments;
 import com.nmerrill.kothcomm.communication.Downloader;
 import com.nmerrill.kothcomm.communication.LanguageLoader;
@@ -30,8 +31,10 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 
-/** Almost entirely based on com.nmerrill.kothcomm.game.KotHComm.
- *  The only major change is to add multi-thread support.
+/**
+ * Almost entirely based on com.nmerrill.kothcomm.game.KotHComm.
+ * The only major change is to add multi-thread support.
+ *
  * @param <T>
  * @param <U>
  */
@@ -47,7 +50,7 @@ public class KotHCommMultiThread<T extends AbstractPlayer<T>, U extends Abstract
     private int threadCount;
     private boolean shouldDownload;
 
-    public KotHCommMultiThread(Supplier<U> gameSupplier){
+    public KotHCommMultiThread(Supplier<U> gameSupplier) {
         this.gameSupplier = gameSupplier;
         this.languages = Lists.mutable.empty();
         localLoader = new LocalJavaLoader<>();
@@ -61,11 +64,11 @@ public class KotHCommMultiThread<T extends AbstractPlayer<T>, U extends Abstract
         this.threadCount = 4;
     }
 
-    public void addLanguage(Language<T> language){
+    public void addLanguage(Language<T> language) {
         this.languages.add(language);
     }
 
-    public void addSubmission(String name, Supplier<T> playerConstructor){
+    public void addSubmission(String name, Supplier<T> playerConstructor) {
         this.localLoader.register(name, playerConstructor);
     }
 
@@ -97,10 +100,10 @@ public class KotHCommMultiThread<T extends AbstractPlayer<T>, U extends Abstract
         this.tournamentSupplier = (i, j) -> tournamentSupplier.apply(i);
     }
 
-    public void setTournament(Supplier<Tournament<Submission<T>>> tournamentSupplier){
+    public void setTournament(Supplier<Tournament<Submission<T>>> tournamentSupplier) {
         this.tournamentSupplier = (i, j) -> tournamentSupplier.get();
     }
-    
+
     public int getThreadCount() {
         return threadCount;
     }
@@ -109,14 +112,15 @@ public class KotHCommMultiThread<T extends AbstractPlayer<T>, U extends Abstract
         this.threadCount = threadCount;
     }
 
-    public void run(String[] args){
-        Arguments.parse(args);
-        LanguageLoader<T> loader = new LanguageLoader<>(arguments);
-        languages.forEach(loader::addLoader);
-        if (shouldDownload && arguments.validQuestionID()) {
-            new Downloader(loader, arguments.questionID).downloadQuestions();
-        }
-        MutableList<Submission<T>> players = loader.load();
+    public void run(String[] args) {
+        SplixArguments arguments = (SplixArguments) this.arguments;
+        if (arguments.multiThread)
+            setThreadCount(arguments.threadCount);
+        else
+            setThreadCount(1);
+
+
+        MutableList<Submission<T>> players = loadPlayers(shouldDownload, arguments, languages);
         Random random = arguments.getRandom();
         Tournament<Submission<T>> tournament = tournamentSupplier.apply(players, random);
 
@@ -134,20 +138,29 @@ public class KotHCommMultiThread<T extends AbstractPlayer<T>, U extends Abstract
         Semaphore finishedLock = new Semaphore(1);
         TournamentRunner<T, U> runner = new TournamentRunner<>(tournament, aggregator, gameSize, gameSupplier, random);
         
-        printer.out.println("Running "+arguments.iterations+" games");
-        
+        printer.out.println("Running " + arguments.iterations + " games");
+
         Runnable gameRunnerTask = () -> {
             try {
                 while (numberOfGamesLeft.get() > 0) {
                     tournamentLock.lock();
                     U game;
                     try {
-                        game = runner.createGame();}
-                    finally {tournamentLock.unlock();}
+                        // debugging code
+//                        runner.
+
+                        // end debug
+                        game = runner.createGame();
+                    } finally {
+                        tournamentLock.unlock();
+                    }
                     game.run();
                     printLock.lock();
-                    try {printer.printProgress(arguments.iterations - numberOfGamesLeft.get(), arguments.iterations);}
-                    finally {printLock.unlock();}
+                    try {
+                        printer.printProgress(arguments.iterations - numberOfGamesLeft.get(), arguments.iterations);
+                    } finally {
+                        printLock.unlock();
+                    }
                     numberOfGamesLeft.decrementAndGet();
                 }
                 finishedLock.release();
@@ -167,9 +180,18 @@ public class KotHCommMultiThread<T extends AbstractPlayer<T>, U extends Abstract
             e.printStackTrace();
         }
 
-        // kill all tasks, since we are done and some threads may be hanging around processing stray games
+        // kill all tasks since we are done, and some threads may be hanging around processing stray games
         executor.shutdownNow();
         return runner;
     }
 
+    
+    public static <T extends AbstractPlayer<T>> MutableList<Submission<T>> loadPlayers(boolean shouldDownload, SplixArguments arguments, MutableList<Language<T>> languages) {
+        LanguageLoader<T> loader = new LanguageLoader<>(arguments);
+        languages.forEach(loader::addLoader);
+        if (shouldDownload && arguments.validQuestionID()) {
+            new Downloader(loader, arguments.questionID).downloadQuestions();
+        }
+        return loader.load();
+    }
 }

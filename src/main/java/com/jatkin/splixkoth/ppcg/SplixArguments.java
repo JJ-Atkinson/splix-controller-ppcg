@@ -9,7 +9,8 @@ import com.nmerrill.kothcomm.communication.Arguments;
 public class SplixArguments extends Arguments {
     @Parameter(
         names = {"-m", "--multi-thread"},
-        description = "Allow multi-threaded running (same as `--thread-count 1`)"
+        description = "Allow multi-threaded running (same as `--thread-count 1`)",
+        arity = 1
     )
     public boolean multiThread = true;
     
@@ -19,5 +20,7 @@ public class SplixArguments extends Arguments {
     )
     public int threadCount = 4;
     
-    
+    {
+        iterations = 500;// more reasonable default
+    }
 }
