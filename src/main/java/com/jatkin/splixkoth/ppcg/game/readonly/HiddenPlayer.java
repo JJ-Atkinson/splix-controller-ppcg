@@ -29,6 +29,6 @@ public class HiddenPlayer {
 
     @Override
     public int hashCode() {
-        return backing.hashCode();
+        return backing == null? 0 : backing.hashCode();
     }
 }

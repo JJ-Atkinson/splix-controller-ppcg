@@ -30,11 +30,12 @@ dependencies {
     // The production code uses the SLF4J logging API at compile time
     compile 'org.eclipse.collections:eclipse-collections-api:8.0.0'
     compile 'org.eclipse.collections:eclipse-collections:8.0.0'
-    compile 'com.github.nathanmerrill:KoTHComm:1.0.5'
+    compile 'com.github.nathanmerrill:KoTHComm:1.0.10'
     compile 'com.beust:jcommander:1.48'
+    compile 'org.clojure:clojure:1.8.0'
+
     testCompile 'org.spockframework:spock-core:1.1-groovy-2.4-rc-2'
     compile files("${System.properties['java.home']}/../lib/tools.jar")
-
 }
 
 task copyTestResources(type: Copy) {
