@@ -29,8 +29,8 @@ public class Main {
         long now = System.currentTimeMillis();
         KotHCommMultiThread<SplixPlayer, SplixGame> runner = new KotHCommMultiThread<>(() -> new SplixGame(SplixSettings.boardDims));
 
-        runner.addLanguage(new JavaLoader<>(SplixPlayer.class));
-        runner.setGameSize(2);
+        SplixSettings.languages.each(runner::addLanguage);
+        runner.setGameSize(SplixSettings.playersPerGame);
         runner.setArgumentParser(args);
         runner.run(appargs);
         System.out.println("Time to run: " + (System.currentTimeMillis() - now));

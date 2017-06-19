@@ -70,7 +70,7 @@ public class UIDebuggerRunner extends Application {
                         KotHCommMultiThread.loadPlayers(
                                 true,
                                 arguments,
-                                Lists.mutable.of(new JavaLoader<>(SplixPlayer.class))),
+                                SplixSettings.languages.toList()),
                         random),
                 new ItemAggregator<>(),
                 SplixSettings.playersPerGame,
