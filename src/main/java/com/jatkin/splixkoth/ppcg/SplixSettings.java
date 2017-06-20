@@ -15,7 +15,7 @@ import org.eclipse.collections.impl.factory.Lists;
 public class SplixSettings {
     public static final int gameIterationsCount = 2000;
     public static final int pointsForKill = 300;
-    public static final int boardDims = 200;
+    public static final int boardDims = 100;
     
     // must be square for the ui to work correctly
     public static final Point2D viewingAreaSize = new Point2D(20, 20);
