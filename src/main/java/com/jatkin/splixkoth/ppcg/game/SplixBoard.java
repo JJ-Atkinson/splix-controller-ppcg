@@ -167,7 +167,18 @@ public class SplixBoard extends NeighborhoodGraphMap<Point2D, SplixPoint> {
 
         for (Point2D pt : checkSpace) {
             Set<Point2D> points = floodSearchHelperFillPlayerCapturedArea(pt, whoToCheck, previouslyVisitedLocations);
-            if (points != null) {// valid fill that didn't hit wall
+            MutableList<Point2D> border = getAdjacent(points);
+            
+            // Interesting edge case: A player can completely surround another, and when the 2nd player
+            // exits his area to make a trail and claim more area, the first player would originally 
+            // capture all of the 2nd player's land. This code removes that edge case.
+            // ref: https://chat.stackexchange.com/transcript/message/38228281#38228281
+            boolean canFillIn = border.toSet().select(p2d -> {
+                        SplixPlayer claimer = get(p2d).getClaimer();
+                        return claimer != null && claimer != whoToCheck;
+                    }).isEmpty();
+            
+            if (points != null && canFillIn) {// valid fill that didn't hit wall
                 points.forEach(x -> get(x).setOwner(whoToCheck));
             }
         }
